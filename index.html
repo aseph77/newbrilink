@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRI Link Pro - Dashboard Adaptif</title>
+    <title>BRI Link Pro - Pemisah Ribuan</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -16,7 +16,7 @@
         .locked-overlay::after { 
             content: "MENU TERKUNCI - SINKRONKAN SALDO AWAL DULU"; 
             position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: rgba(255,255,255,0.85); display: flex; align-items: center; 
+            background: rgba(255,255,255,0.9); display: flex; align-items: center; 
             justify-content: center; font-weight: bold; color: #1e40af; z-index: 50; 
             border-radius: 0.75rem; text-align: center; padding: 20px;
         }
@@ -29,7 +29,7 @@
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-blue-800 tracking-tighter">BRI Link Pro</h1>
-                <p class="text-gray-500">Kelola Pembukuan Jadi Tau</p>
+                <p class="text-gray-500 italic">"Jadi Tau" Pembukuan Digital</p>
             </div>
             <div class="space-y-4">
                 <input v-model="login.email" type="email" placeholder="Email" class="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-blue-500 outline-none transition">
@@ -41,15 +41,15 @@
 
     <div v-else class="min-h-screen flex flex-col">
         <nav class="bg-blue-700 text-white p-4 shadow-lg sticky top-0 z-50">
-            <div class="container mx-auto flex justify-between items-center">
-                <h1 class="font-bold text-xl">{{ config.namaToko }}</h1>
-                <button @click="handleLogout" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded text-sm font-bold">Logout</button>
+            <div class="container mx-auto flex justify-between items-center text-center">
+                <h1 class="font-bold text-lg md:text-xl">{{ config.namaToko }}</h1>
+                <button @click="handleLogout" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded text-sm font-bold transition">Logout</button>
             </div>
         </nav>
 
         <div class="container mx-auto p-4 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-4 space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500">
                     <h2 class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Monitor Real-time</h2>
                     <div class="space-y-4">
                         <div class="flex justify-between items-end border-b pb-2">
@@ -68,9 +68,9 @@
                     <div v-if="!sessionStarted" class="space-y-3">
                         <div v-for="(val, key) in saldoAwal" :key="key" class="flex items-center gap-2">
                             <label class="w-24 text-xs font-bold text-gray-500">{{ key }}</label>
-                            <input v-model.number="saldoAwal[key]" type="number" class="flex-1 border p-2 rounded bg-blue-50 focus:bg-white outline-none">
+                            <input :value="formatUang(saldoAwal[key])" @input="updateSaldo($event, key)" type="text" class="flex-1 border p-2 rounded bg-blue-50 focus:bg-white outline-none text-right font-bold">
                         </div>
-                        <button @click="startSession" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg mt-4 shadow-md">MULAI SESI (BUKA GEMBOK)</button>
+                        <button @click="startSession" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg mt-4 shadow-md transition">MULAI SESI (BUKA GEMBOK)</button>
                     </div>
                     <div v-else class="grid grid-cols-2 gap-3">
                         <div v-for="(val, key) in saldoAwal" :key="key" class="bg-gray-50 p-2 rounded border text-center">
@@ -84,7 +84,7 @@
             <div class="lg:col-span-8 space-y-6">
                 <div class="relative" :class="{ 'locked-overlay': !sessionStarted }">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="flex border-b bg-gray-50 text-sm font-bold">
+                        <div class="flex border-b bg-gray-50 text-sm font-bold text-center">
                             <button @click="tipe = 'transfer'" :class="tipe=='transfer'?'border-b-4 border-blue-600 text-blue-600 bg-white':'text-gray-400'" class="flex-1 py-4 uppercase">Transfer</button>
                             <button @click="tipe = 'pulsa'" :class="tipe=='pulsa'?'border-b-4 border-blue-600 text-blue-600 bg-white':'text-gray-400'" class="flex-1 py-4 uppercase">Pulsa/Token</button>
                             <button @click="tipe = 'wesel'" :class="tipe=='wesel'?'border-b-4 border-blue-600 text-blue-600 bg-white':'text-gray-400'" class="flex-1 py-4 uppercase">Wesel</button>
@@ -94,35 +94,35 @@
                             <div v-if="tipe == 'transfer'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="md:col-span-3">
                                     <label class="text-xs font-bold text-gray-400">SUMBER SALDO</label>
-                                    <select v-model="form.rekening" class="w-full border-2 p-3 rounded-lg mt-1">
+                                    <select v-model="form.rekening" class="w-full border-2 p-3 rounded-lg mt-1 outline-none">
                                         <option v-for="(v, k) in saldoAwal" v-if="k != 'Laci'" :key="k" :value="k">{{ k }}</option>
                                     </select>
                                 </div>
-                                <input v-model.number="form.nominal" type="number" placeholder="Nominal" class="border-2 p-3 rounded-lg">
-                                <input v-model.number="form.adminToko" type="number" placeholder="Admin Toko" class="border-2 p-3 rounded-lg">
-                                <input v-model.number="form.potonganBank" type="number" placeholder="Potongan Bank" class="border-2 p-3 rounded-lg">
+                                <div><label class="text-[10px] font-bold">NOMINAL</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
+                                <div><label class="text-[10px] font-bold">ADMIN TOKO</label><input :value="formatUang(form.adminToko)" @input="updateForm($event, 'adminToko')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
+                                <div><label class="text-[10px] font-bold">POTONG BANK</label><input :value="formatUang(form.potonganBank)" @input="updateForm($event, 'potonganBank')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
                             </div>
 
                             <div v-if="tipe == 'pulsa'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input v-model.number="form.modal" type="number" placeholder="Harga Modal" class="border-2 p-3 rounded-lg">
-                                <input v-model.number="form.jual" type="number" placeholder="Harga Jual" class="border-2 p-3 rounded-lg">
+                                <div><label class="text-[10px] font-bold">HARGA MODAL</label><input :value="formatUang(form.modal)" @input="updateForm($event, 'modal')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
+                                <div><label class="text-[10px] font-bold">HARGA JUAL</label><input :value="formatUang(form.jual)" @input="updateForm($event, 'jual')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
                             </div>
 
                             <div v-if="tipe == 'wesel'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <select v-model="form.jenisWesel" class="border-2 p-3 rounded-lg">
+                                <select v-model="form.jenisWesel" class="border-2 p-3 rounded-lg outline-none">
                                     <option value="kirim">Wesel Kirim (Laci+ / Bank-)</option>
                                     <option value="terima">Wesel Terima (Laci- / Bank+)</option>
                                 </select>
                                 <input v-model="form.kodeWesel" type="text" placeholder="Kode Referensi" class="border-2 p-3 rounded-lg">
-                                <input v-model.number="form.nominal" type="number" placeholder="Nominal" class="border-2 p-3 rounded-lg">
-                                <input v-model.number="form.adminToko" type="number" placeholder="Fee Admin" class="border-2 p-3 rounded-lg">
+                                <div><label class="text-[10px] font-bold">NOMINAL</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
+                                <div><label class="text-[10px] font-bold">ADMIN</label><input :value="formatUang(form.adminToko)" @input="updateForm($event, 'adminToko')" type="text" class="w-full border-2 p-3 rounded-lg text-right font-bold"></div>
                             </div>
 
-                            <input v-model="form.nama" type="text" placeholder="Nama Pelanggan (Untuk Hutang)" class="w-full border-2 p-3 rounded-lg bg-gray-50">
+                            <input v-model="form.nama" type="text" placeholder="Nama Pelanggan (Hutang wajib diisi)" class="w-full border-2 p-3 rounded-lg bg-gray-50 outline-none">
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                                <button @click="saveTransaksi('sukses')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">SIMPAN & CETAK LUNAS</button>
-                                <button @click="saveTransaksi('hutang')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">SIMPAN & CETAK BON</button>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-center">
+                                <button @click="saveTransaksi('sukses')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95">SIMPAN & CETAK LUNAS</button>
+                                <button @click="saveTransaksi('hutang')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95">SIMPAN & CETAK BON</button>
                             </div>
                         </div>
                     </div>
@@ -185,14 +185,28 @@ new Vue({
         printData: null
     },
     methods: {
+        formatUang(val) {
+            return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+        parseUang(val) {
+            return parseInt(val.replace(/\./g, '')) || 0;
+        },
+        updateSaldo(event, key) {
+            this.saldoAwal[key] = this.parseUang(event.target.value);
+        },
+        updateForm(event, field) {
+            this.form[field] = this.parseUang(event.target.value);
+        },
         handleLogin() {
             auth.signInWithEmailAndPassword(this.login.email, this.login.pass)
                 .then(() => { this.isLoggedIn = true; })
                 .catch(err => alert("Gagal Login: " + err.message));
         },
         handleLogout() { auth.signOut().then(() => { location.reload(); }); },
-        startSession() { if(this.saldoAwal.Laci <= 0) return alert("Isi saldo laci dulu!"); this.sessionStarted = true; },
-        formatUang(val) { return val.toLocaleString('id-ID'); },
+        startSession() { 
+            if(this.saldoAwal.Laci <= 0) return alert("Isi saldo laci dulu!"); 
+            this.sessionStarted = true; 
+        },
         saveTransaksi(status) {
             let laba = 0, total = 0;
             if(this.tipe == 'transfer'){
@@ -218,10 +232,15 @@ new Vue({
             setTimeout(() => { window.print(); }, 500);
             this.resetForm();
         },
-        resetForm() { this.form.nominal = 0; this.form.adminToko = 0; this.form.nama = 'Umum'; this.form.kodeWesel = ''; },
+        resetForm() { this.form.nominal = 0; this.form.adminToko = 0; this.form.nama = 'Umum'; this.form.kodeWesel = ''; this.form.modal = 0; this.form.jual = 0; this.form.potonganBank = 0; },
         uploadData() {
             if(!confirm("Tutup sesi & upload ke Firebase?")) return;
-            db.ref('laporan/' + Date.now()).set({ saldoAwal: this.saldoAwal, transaksi: this.transaksiList, totalLaba: this.monitor.laba, tanggal: new Date().toLocaleDateString() })
+            db.ref('laporan/' + Date.now()).set({ 
+                saldoAwal: this.saldoAwal, 
+                transaksi: this.transaksiList, 
+                totalLaba: this.monitor.laba, 
+                tanggal: new Date().toLocaleDateString() 
+            })
             .then(() => { alert("Sinkronisasi Berhasil!"); location.reload(); });
         }
     }
