@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRI Link Pro - Professional Management</title>
+    <title>BRI Link Pro - Professional Financial System</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -13,54 +13,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; width: 58mm; } }
-        body { font-family: 'Inter', -apple-system, sans-serif; background-color: #f1f5f9; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
         .thermal-font { font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: black; }
-        
-        /* Mobile Tab Styling */
-        .tab-btn { background-color: #f8fafc; color: #64748b; border-bottom: 2px solid transparent; transition: all 0.3s; }
-        .tab-btn.active { background-color: #eff6ff; color: #1e40af; border-bottom: 2px solid #1e40af; font-weight: 800; }
-        
+        .nav-active { background: #1e40af; color: white !important; }
+        .tab-active-mobile { background-color: #eff6ff; color: #1e40af; border-bottom: 3px solid #1e40af; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .locked-action { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
-        .monitor-card { background: white; border: 1px solid #e2e8f0; min-width: 140px; }
-        input, select { font-weight: 600; }
     </style>
 </head>
-<body>
+<body class="text-gray-900">
 
 <div id="app" class="flex flex-col lg:flex-row min-h-screen">
     
     <div v-if="!isLoggedIn" class="min-h-screen w-full flex items-center justify-center bg-blue-900 p-6">
-        <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md text-center">
-            <h1 class="text-3xl font-bold text-blue-800 mb-2 tracking-tighter italic">BRI LINK PRO</h1>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <h1 class="text-2xl font-bold text-blue-800 mb-2 uppercase tracking-tighter">BRI LINK PRO</h1>
             <p class="text-gray-400 text-xs mb-8 font-bold uppercase tracking-widest">{{ config.namaToko }}</p>
-            <div class="space-y-4 text-left">
-                <label class="text-[10px] font-bold text-gray-400 ml-1">EMAIL AGEN</label>
-                <input v-model="login.email" type="email" class="w-full border-2 border-gray-100 p-4 rounded-xl outline-none focus:border-blue-500 bg-gray-50">
-                <label class="text-[10px] font-bold text-gray-400 ml-1">PASSWORD</label>
-                <input v-model="login.pass" type="password" class="w-full border-2 border-gray-100 p-4 rounded-xl outline-none focus:border-blue-500 bg-gray-50">
-                <button @click="handleLogin" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-black transition">LOGIN</button>
+            <div class="space-y-4">
+                <input v-model="login.email" type="email" placeholder="Email" class="w-full border p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold bg-gray-50">
+                <input v-model="login.pass" type="password" placeholder="Password" class="w-full border p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-semibold">
+                <button @click="handleLogin" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-black transition">Masuk</button>
             </div>
         </div>
     </div>
 
-    <aside v-if="isLoggedIn" class="hidden lg:flex flex-col w-64 bg-blue-900 text-white h-screen sticky top-0">
-        <div class="p-6 border-b border-blue-800 uppercase italic font-black text-center">
-            {{ config.namaToko }}
+    <aside v-if="isLoggedIn" class="hidden lg:flex flex-col w-64 bg-blue-900 text-white h-screen sticky top-0 shadow-xl">
+        <div class="p-6 border-b border-blue-800">
+            <h1 class="text-xl font-bold uppercase tracking-tight truncate">{{ config.namaToko }}</h1>
         </div>
         <nav class="flex-1 p-4 space-y-1">
             <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" 
-                :class="activeTab == tab.id ? 'bg-blue-800' : 'hover:bg-blue-800'"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition text-sm">
+                :class="activeTab == tab.id ? 'nav-active' : 'hover:bg-blue-800'"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition text-sm">
                 <i :class="tab.icon"></i> {{ tab.label }}
             </button>
         </nav>
         <div class="p-4 border-t border-blue-800 space-y-2">
-            <button @click="finishSession" :class="!sessionStarted ? 'locked-action' : 'bg-yellow-500 hover:bg-yellow-600'" class="w-full py-3 rounded-lg font-bold text-xs uppercase text-white transition shadow">
+            <button @click="finishSession" :class="!sessionStarted ? 'locked-action' : 'bg-yellow-500 hover:bg-yellow-600'" class="w-full py-3 rounded-lg font-bold text-xs uppercase text-white shadow">
                 <i class="fas fa-power-off mr-2"></i> Akhiri Sesi
             </button>
-            <button @click="handleLogout" :class="sessionStarted ? 'locked-action' : 'bg-red-600 hover:bg-red-700'" class="w-full py-3 rounded-lg font-bold text-xs uppercase text-white transition shadow">
+            <button @click="handleLogout" :class="sessionStarted ? 'locked-action' : 'bg-red-600 hover:bg-red-700'" class="w-full py-3 rounded-lg font-bold text-xs uppercase text-white shadow">
                 <i :class="sessionStarted ? 'fas fa-lock mr-2' : 'fas fa-sign-out-alt mr-2'"></i> Logout
             </button>
         </div>
@@ -68,172 +60,172 @@
 
     <main v-if="isLoggedIn" class="flex-1 flex flex-col h-screen overflow-hidden">
         
-        <header class="bg-white border-b sticky top-0 z-50">
-            <div class="p-4 flex justify-between items-center lg:hidden bg-blue-800 text-white">
-                <span class="font-bold text-sm uppercase tracking-widest italic">{{ config.namaToko }}</span>
+        <header class="bg-white border-b sticky top-0 z-50 shadow-sm">
+            <div class="p-4 flex justify-between items-center lg:hidden bg-blue-700 text-white shadow-md">
+                <span class="font-bold text-sm uppercase tracking-wide truncate max-w-[60%]">{{ config.namaToko }}</span>
                 <span class="text-[9px] font-bold px-2 py-1 rounded bg-blue-900 border border-blue-600 uppercase">{{ sessionStarted ? 'Aktif' : 'Lock' }}</span>
             </div>
             
             <div class="flex gap-3 p-4 overflow-x-auto no-scrollbar bg-gray-50 border-b">
-                <div v-for="m in monitorCards" :key="m.key" class="monitor-card flex-shrink-0 lg:flex-1 p-3 rounded-xl shadow-sm flex flex-col justify-between">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter leading-none">{{ m.label }}</span>
+                <div v-for="m in monitorCards" :key="m.key" class="flex-shrink-0 min-w-[145px] lg:flex-1 p-3 rounded-xl border bg-white shadow-sm flex flex-col justify-between">
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">{{ m.label }}</span>
                     <span :class="m.text" class="text-sm font-bold tracking-tight">Rp{{ formatUang(m.value) }}</span>
                 </div>
             </div>
 
             <div class="lg:hidden flex bg-white border-b overflow-x-auto no-scrollbar">
                 <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" 
-                    :class="activeTab == tab.id ? 'active' : ''"
-                    class="tab-btn flex-1 py-3 px-2 text-[9px] font-bold uppercase tracking-widest text-center whitespace-nowrap">
+                    :class="activeTab == tab.id ? 'tab-active-mobile' : 'text-gray-400'"
+                    class="flex-1 py-3 px-2 text-[9px] font-bold uppercase tracking-widest text-center transition-all">
                     <i :class="tab.icon" class="block mb-1 text-sm"></i>
                     {{ tab.label }}
                 </button>
             </div>
         </header>
 
-        <section class="flex-1 overflow-y-auto p-4 lg:p-10 pb-40 no-scrollbar">
+        <section class="flex-1 overflow-y-auto p-4 lg:p-10 pb-44 no-scrollbar">
             
             <div v-if="activeTab == 'input'">
-                <div v-if="!sessionStarted" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border-t-8 border-yellow-500 text-center italic uppercase">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6 tracking-widest leading-none">Sync Saldo Awal</h2>
-                    <div class="space-y-4 text-left mb-8">
+                <div v-if="!sessionStarted" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border-t-8 border-yellow-500">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 uppercase text-center">Sync Saldo Awal</h2>
+                    <div class="space-y-4 mb-8">
                         <div v-for="(v, k) in saldoAwal" :key="k">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">{{k}}</label>
-                            <input :value="formatUang(saldoAwal[k])" @input="updateSaldo($event, k)" class="w-full border-2 border-gray-100 p-3 rounded-xl text-right font-bold text-blue-900 bg-gray-50 focus:bg-white outline-none">
+                            <input :value="formatUang(saldoAwal[k])" @input="updateSaldo($event, k)" class="w-full border border-gray-300 p-3 rounded-xl text-right font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 uppercase transition">
                         </div>
                     </div>
-                    <button @click="startSession" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg uppercase tracking-widest italic">Mulai Sesi</button>
+                    <button @click="startSession" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg uppercase tracking-widest transition active:scale-95">Mulai Sesi Harian</button>
                 </div>
 
-                <div v-else class="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow border border-gray-200 space-y-4">
+                <div v-else class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
                     <div class="flex gap-1 p-1 bg-gray-100 rounded-xl overflow-x-auto no-scrollbar">
-                        <button v-for="t in ['transfer','tarik','pulsa','wesel','tabungan']" @click="tipe = t" :class="tipe == t ? 'bg-white shadow text-blue-700' : 'text-gray-400'" class="px-4 py-2 rounded-lg font-bold text-[10px] uppercase transition flex-1">{{t}}</button>
+                        <button v-for="t in ['transfer','tarik','pulsa','wesel','tabungan']" @click="tipe = t" :class="tipe == t ? 'bg-white shadow text-blue-700' : 'text-gray-400'" class="px-4 py-3 rounded-lg font-bold text-[10px] uppercase flex-1 transition">{{t}}</button>
                     </div>
                     
                     <div class="space-y-4">
                         <div v-if="tipe !== 'tabungan'">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 italic tracking-widest leading-none">Pilih Rekening Utama</label>
-                            <select v-model="form.rekening" class="w-full border p-3 rounded-xl font-bold outline-none bg-gray-50 focus:bg-white transition uppercase text-sm">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Sumber Rekening</label>
+                            <select v-model="form.rekening" class="w-full border border-gray-300 p-4 rounded-xl font-bold outline-none bg-white text-sm uppercase">
                                 <option v-for="(v, k) in saldoAwal" v-if="k != 'Laci'" :key="k" :value="k">{{k}}</option>
                             </select>
                         </div>
-                        <input v-model="form.nama" type="text" placeholder="NAMA PELANGGAN" class="w-full border p-3 rounded-xl font-bold uppercase bg-gray-50 text-sm">
+                        <input v-model="form.nama" type="text" placeholder="NAMA PELANGGAN" class="w-full border border-gray-300 p-4 rounded-xl font-bold text-sm uppercase outline-none focus:border-blue-500 bg-gray-50">
                         
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-[10px] font-bold text-gray-500 uppercase">Nominal</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" class="w-full border p-3 rounded-xl font-bold text-right text-blue-700 bg-gray-50 outline-none"></div>
-                            <div v-if="tipe !== 'tabungan'"><label class="text-[10px] font-bold text-gray-500 uppercase">Admin Toko</label><input :value="formatUang(form.adminToko)" @input="updateForm($event, 'adminToko')" class="w-full border p-3 rounded-xl font-bold text-right text-green-700 bg-gray-50 outline-none"></div>
+                            <div><label class="text-[10px] font-bold text-gray-500 uppercase">Nominal</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" class="w-full border border-gray-300 p-4 rounded-xl font-bold text-right text-blue-700 outline-none"></div>
+                            <div v-if="tipe !== 'tabungan'"><label class="text-[10px] font-bold text-gray-500 uppercase">Admin Toko</label><input :value="formatUang(form.adminToko)" @input="updateForm($event, 'adminToko')" class="w-full border border-gray-300 p-4 rounded-xl font-bold text-right text-green-700 outline-none"></div>
                         </div>
 
-                        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 grid grid-cols-2 gap-4">
-                            <div><label class="text-[9px] font-bold text-yellow-700 uppercase">Uang Diterima</label><input :value="formatUang(form.bayar)" @input="updateForm($event, 'bayar')" class="w-full border-b-2 border-yellow-300 bg-transparent p-1 font-bold text-right text-gray-800 outline-none"></div>
-                            <div><p class="text-[9px] font-bold text-yellow-700 uppercase leading-none mb-1">Kembalian</p><p class="text-lg font-black text-red-600 tracking-tighter italic leading-none">Rp{{ formatUang(kembalian) }}</p></div>
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-4">
+                            <div><label class="text-[9px] font-bold text-blue-500 uppercase">Uang Diterima</label><input :value="formatUang(form.bayar)" @input="updateForm($event, 'bayar')" class="w-full border-b-2 border-blue-200 bg-transparent p-1 font-bold text-right text-gray-800 outline-none"></div>
+                            <div><p class="text-[9px] font-bold text-blue-500 uppercase mb-1 leading-none">Kembalian</p><p class="text-lg font-black text-red-600 tracking-tighter">Rp{{ formatUang(kembalian) }}</p></div>
                         </div>
 
-                        <div v-if="tipe == 'transfer' || tipe == 'tarik' || tipe == 'wesel'" class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <label class="text-[10px] font-bold text-blue-600 uppercase mb-2 block tracking-widest leading-none">Metode Biaya Admin</label>
-                            <div class="flex gap-6 text-[11px] font-bold uppercase italic tracking-tighter">
-                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" v-model="form.adminMethod" value="tunai"> Bayar Tunai</label>
-                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" v-model="form.adminMethod" value="potong"> Potong Saldo Bank</label>
+                        <div v-if="tipe == 'transfer' || tipe == 'tarik' || tipe == 'wesel'" class="bg-gray-100 p-4 rounded-xl border border-gray-200">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest leading-none">Metode Admin</label>
+                            <div class="flex gap-6 text-[12px] font-bold">
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" v-model="form.adminMethod" value="tunai" class="w-4 h-4"> Bayar Tunai</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" v-model="form.adminMethod" value="potong" class="w-4 h-4"> Potong Saldo</label>
                             </div>
                         </div>
 
-                        <div v-if="tipe == 'transfer'"><label class="text-[10px] font-bold text-red-500 uppercase ml-1">Fee Modal Bank</label><input :value="formatUang(form.potonganBank)" @input="updateForm($event, 'potonganBank')" class="w-full border p-3 rounded-xl font-bold text-right text-red-600 bg-gray-50 outline-none"></div>
+                        <div v-if="tipe == 'transfer'"><label class="text-[10px] font-bold text-red-500 uppercase ml-1 tracking-tighter">Modal Fee Bank</label><input :value="formatUang(form.potonganBank)" @input="updateForm($event, 'potonganBank')" class="w-full border border-gray-300 p-4 rounded-xl font-bold text-right text-red-600 outline-none"></div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 uppercase italic">
-                        <button @click="openPreview('sukses')" class="bg-blue-700 text-white py-4 rounded-xl font-bold shadow hover:bg-black transition active:scale-95 uppercase tracking-widest">Simpan Lunas</button>
-                        <button @click="openPreview('hutang')" class="bg-red-600 text-white py-4 rounded-xl font-bold shadow hover:bg-black transition active:scale-95 uppercase tracking-widest">Simpan Bon</button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 uppercase">
+                        <button @click="openPreview('sukses')" class="bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg uppercase text-xs tracking-widest active:scale-95 transition">SIMPAN LUNAS</button>
+                        <button @click="openPreview('hutang')" class="bg-red-600 text-white py-4 rounded-xl font-bold shadow-lg uppercase text-xs tracking-widest active:scale-95 transition">SIMPAN BON</button>
                     </div>
                 </div>
             </div>
 
-            <div v-if="activeTab == 'berhasil'" class="max-w-3xl mx-auto space-y-2">
-                <div v-for="(t, i) in transaksiList" v-if="t.status == 'sukses'" :key="i" class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm italic uppercase tracking-tighter">
-                    <div>
-                        <span class="font-bold text-sm block tracking-tighter">{{t.nama}}</span>
+            <div v-if="activeTab == 'berhasil'" class="max-w-3xl mx-auto space-y-2 uppercase tracking-tighter">
+                <div v-for="(t, i) in transaksiList" v-if="t.status == 'sukses'" :key="i" class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
+                    <div class="flex-1 truncate pr-2">
+                        <span class="font-bold text-sm text-gray-800 uppercase block truncate leading-none mb-1">{{t.nama}}</span>
                         <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{{t.tipe}} | Rp{{formatUang(t.total)}}</span>
                     </div>
-                    <button @click="reprint(t)" class="bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded-xl shadow transition active:scale-90"><i class="fas fa-print"></i></button>
+                    <button @click="reprint(t)" class="bg-blue-100 text-blue-700 w-10 h-10 flex items-center justify-center rounded-lg shadow-sm active:scale-90 transition"><i class="fas fa-print"></i></button>
                 </div>
             </div>
 
             <div v-if="activeTab == 'piutang'" class="max-w-3xl mx-auto space-y-3">
-                <div v-for="(t, i) in transaksiList" v-if="t.status == 'hutang'" :key="i" class="bg-white p-5 rounded-2xl border-l-8 border-red-600 shadow flex justify-between items-center italic uppercase tracking-tighter font-black italic">
-                    <div><p class="font-bold text-lg text-gray-800 leading-none mb-1">{{t.nama}}</p><p class="text-xs font-bold text-red-600">Rp{{formatUang(t.total)}}</p></div>
-                    <div class="flex gap-2 leading-none font-bold italic uppercase tracking-widest italic tracking-tighter">
-                        <button @click="reprint(t)" class="bg-gray-100 text-gray-400 w-10 h-10 flex items-center justify-center rounded-lg active:scale-90"><i class="fas fa-print"></i></button>
-                        <button @click="triggerPelunasan(i)" class="bg-green-600 text-white px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-widest shadow transition active:scale-95 italic">LUNASI</button>
+                <div v-for="(t, i) in transaksiList" v-if="t.status == 'hutang'" :key="i" class="bg-white p-5 rounded-xl border-l-8 border-red-600 shadow-sm flex justify-between items-center transition uppercase tracking-tighter">
+                    <div><p class="font-bold text-base text-gray-800 leading-none mb-1">{{t.nama}}</p><p class="text-xs font-bold text-red-600 tracking-widest italic leading-none">Rp{{formatUang(t.total)}}</p></div>
+                    <div class="flex gap-2">
+                        <button @click="reprint(t)" class="bg-gray-200 text-gray-600 w-10 h-10 flex items-center justify-center rounded-lg"><i class="fas fa-print"></i></button>
+                        <button @click="triggerPelunasan(i)" class="bg-green-600 text-white px-5 py-2 rounded-lg font-bold text-[10px] uppercase shadow tracking-widest active:scale-95 transition">LUNASI</button>
                     </div>
                 </div>
             </div>
 
-            <div v-if="activeTab == 'laporan'" class="max-w-xl mx-auto text-center space-y-6 italic uppercase tracking-tighter font-black italic">
-                <div class="bg-white p-8 rounded-2xl border shadow-sm">
-                    <h2 class="font-bold text-xl mb-6 uppercase text-blue-900 border-b pb-4 italic tracking-widest leading-none">Cloud Report</h2>
-                    <div class="grid grid-cols-2 gap-4 mb-8 text-left leading-none uppercase tracking-tighter">
-                        <div class="bg-slate-50 p-4 rounded-xl border italic"><p class="text-[10px] font-bold text-gray-400 mb-1 leading-none italic">Sesi Ini</p><p class="text-xl font-bold text-green-600">Rp{{ formatUang(monitor.laba) }}</p></div>
-                        <div class="bg-slate-50 p-4 rounded-xl border flex flex-col justify-center italic"><p class="text-[10px] font-bold text-gray-400 mb-1 leading-none italic uppercase font-bold italic tracking-widest">Status</p><p class="font-bold text-[10px] leading-none uppercase" :class="isUploaded ? 'text-blue-600' : 'text-red-500'">{{ isUploaded ? 'TERSINKRON' : 'BELUM SYNC' }}</p></div>
+            <div v-if="activeTab == 'laporan'" class="max-w-xl mx-auto space-y-6 text-center uppercase tracking-tighter">
+                <div class="bg-white p-8 rounded-2xl border shadow-sm border-gray-200">
+                    <h2 class="font-bold text-lg mb-6 uppercase text-blue-900 border-b pb-4 tracking-widest leading-none">Cloud Dashboard</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-8 text-left uppercase italic leading-none tracking-tighter">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100"><p class="text-[10px] font-bold text-blue-400 mb-1">Profit Sesi</p><p class="text-xl font-bold text-blue-800 tracking-tighter">Rp{{ formatUang(monitor.laba) }}</p></div>
+                        <div class="bg-green-50 p-4 rounded-xl border border-green-100 flex flex-col justify-center"><p class="text-[10px] font-bold text-green-400 mb-1">Status Sync</p><p class="font-bold uppercase text-[9px] tracking-widest" :class="isUploaded ? 'text-blue-600' : 'text-red-500'">{{ isUploaded ? 'TERSINKRON' : 'BELUM UPLOAD' }}</p></div>
                     </div>
-                    <button @click="uploadData" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest shadow transition mb-3 italic">Upload Firebase</button>
-                    <button @click="downloadExcel" class="w-full bg-green-700 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest shadow transition italic tracking-tighter"><i class="fas fa-file-excel mr-2"></i> Download XLSX</button>
+                    <div class="space-y-3">
+                        <button @click="uploadData" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition">Upload Ke Cloud</button>
+                        <button @click="downloadExcel" class="w-full bg-green-700 text-white py-4 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow transition hover:bg-green-800"><i class="fas fa-file-excel mr-2"></i> Ekspor Laporan (.xlsx)</button>
+                    </div>
                 </div>
             </div>
 
-            <div v-if="activeTab == 'akun'" class="max-w-xl mx-auto bg-white p-8 rounded-2xl border shadow-sm space-y-6 italic uppercase tracking-tighter italic">
-                <h2 class="font-bold text-xl text-blue-900 border-b pb-4 uppercase italic tracking-tighter leading-none italic">Setelan Profil</h2>
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase block tracking-widest">Nama Agen Toko</label><input v-model="config.namaToko" class="w-full border-2 border-gray-100 p-4 rounded-xl font-bold uppercase outline-none bg-gray-50 focus:bg-white tracking-widest"></div>
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase block tracking-widest">Alamat Struk</label><textarea v-model="config.alamat" class="w-full border-2 border-gray-100 p-4 rounded-xl font-bold uppercase outline-none bg-gray-50 h-24 tracking-widest"></textarea></div>
-                <button @click="resetAllData" class="w-full bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-bold uppercase text-[10px] mt-6 tracking-widest italic leading-none"><i class="fas fa-trash-alt mr-2"></i> Reset Semua Data Sesi Ini</button>
+            <div v-if="activeTab == 'akun'" class="max-w-xl mx-auto bg-white p-8 rounded-2xl border shadow-sm space-y-6">
+                <h2 class="font-bold text-lg text-gray-800 border-b pb-4 uppercase tracking-widest">Identitas Agen</h2>
+                <div class="space-y-4">
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">Nama Agen</label><input v-model="config.namaToko" class="w-full border-2 p-3 rounded-xl font-bold uppercase bg-gray-50 focus:bg-white outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">Alamat Struk</label><textarea v-model="config.alamat" class="w-full border-2 p-3 rounded-xl font-bold uppercase bg-gray-50 focus:bg-white outline-none h-20"></textarea></div>
+                    <button @click="resetAllData" class="w-full bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-bold uppercase text-[10px] mt-8 tracking-widest"><i class="fas fa-trash-alt mr-2"></i> Reset Seluruh Data Sesi</button>
+                </div>
             </div>
 
         </section>
 
         <nav class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 pb-8 shadow-2xl z-50">
-            <button v-for="tab in tabs.slice(0,3)" :key="tab.id" @click="activeTab = tab.id" :class="activeTab == tab.id ? 'text-blue-700' : 'text-gray-400'" class="flex flex-col items-center gap-1">
+            <button v-for="tab in tabs.slice(0,3)" :key="tab.id" @click="activeTab = tab.id" :class="activeTab == tab.id ? 'text-blue-700' : 'text-gray-400'" class="flex flex-col items-center gap-1 transition">
                 <i :class="tab.icon + ' text-xl'"></i>
-                <span class="text-[7px] font-bold uppercase tracking-widest italic">{{ tab.label }}</span>
+                <span class="text-[7px] font-bold uppercase tracking-widest">{{ tab.label }}</span>
             </button>
-            <button @click="activeTab = 'laporan'" :class="activeTab == 'laporan' ? 'text-blue-700' : 'text-gray-400'" class="flex flex-col items-center gap-1 transition leading-none">
+            <button @click="activeTab = 'laporan'" :class="activeTab == 'laporan' ? 'text-blue-700' : 'text-gray-400'" class="flex flex-col items-center gap-1">
                 <i class="fas fa-chart-line text-xl"></i>
-                <span class="text-[7px] font-bold uppercase tracking-widest leading-none">Report</span>
+                <span class="text-[7px] font-bold uppercase tracking-widest">Report</span>
             </button>
-            <button @click="finishSession" :class="!sessionStarted ? 'opacity-20 pointer-events-none' : 'text-yellow-600'" class="flex flex-col items-center gap-1 transition leading-none font-bold italic">
+            <button @click="finishSession" :class="!sessionStarted ? 'opacity-20 pointer-events-none' : 'text-yellow-600'" class="flex flex-col items-center gap-1">
                 <i class="fas fa-power-off text-xl"></i>
-                <span class="text-[7px] font-bold uppercase tracking-widest leading-none">END</span>
+                <span class="text-[7px] font-bold uppercase tracking-widest leading-none font-black">End Sesi</span>
             </button>
-            <button @click="handleLogout" :class="sessionStarted ? 'opacity-20 pointer-events-none' : 'text-red-600'" class="flex flex-col items-center gap-1 transition leading-none font-bold italic uppercase">
+            <button @click="handleLogout" :class="sessionStarted ? 'opacity-20 pointer-events-none' : 'text-red-600'" class="flex flex-col items-center gap-1">
                 <i :class="sessionStarted ? 'fas fa-lock text-xl' : 'fas fa-sign-out-alt text-xl'"></i>
-                <span class="text-[7px] font-bold uppercase tracking-widest leading-none">OUT</span>
+                <span class="text-[7px] font-bold uppercase tracking-widest leading-none font-black">Logout</span>
             </button>
         </nav>
 
         <div v-if="showPelunasan" class="fixed inset-0 bg-black bg-opacity-70 z-[200] flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl italic uppercase tracking-tighter">
-                <div class="p-6 bg-green-600 text-white text-center italic uppercase leading-none font-black italic uppercase tracking-widest">
-                    <p class="text-[10px] uppercase font-bold tracking-widest mb-1 leading-none uppercase tracking-tighter">Pelunasan</p>
-                    <h3 class="text-xl font-bold uppercase leading-none italic uppercase">{{ selectedHutang.nama }}</h3>
-                </div>
+            <div class="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl animate-bounce-short uppercase italic tracking-tighter">
+                <div class="p-5 bg-green-600 text-white text-center font-bold uppercase tracking-widest text-sm leading-none">Pelunasan Piutang</div>
                 <div class="p-8 space-y-6">
-                    <div class="text-center font-bold text-3xl text-gray-900 italic tracking-tighter leading-none">Rp{{ formatUang(selectedHutang.total) }}</div>
-                    <div class="space-y-3 font-bold uppercase italic tracking-tighter leading-none font-black italic tracking-widest">
-                        <p class="text-[10px] text-gray-400 text-center uppercase tracking-widest border-b pb-1">Masuk Ke:</p>
-                        <button @click="lunasiFinal('Laci')" class="w-full bg-gray-50 border p-4 rounded-xl flex justify-between items-center font-bold text-xs uppercase hover:bg-blue-50 transition active:scale-95 shadow-sm"><span>1. LACI (KAS)</span><i class="fas fa-wallet text-green-600"></i></button>
-                        <button v-for="(v, k) in saldoAwal" v-if="k != 'Laci'" :key="k" @click="lunasiFinal(k)" class="w-full bg-gray-50 border p-4 rounded-xl flex justify-between items-center font-bold text-xs uppercase hover:bg-blue-50 transition active:scale-95 shadow-sm uppercase tracking-widest italic"><span>2. {{ k }}</span><i class="fas fa-university text-blue-600"></i></button>
+                    <div class="text-center font-bold text-3xl text-gray-900 leading-none">Rp{{ formatUang(selectedHutang.total) }}</div>
+                    <div class="space-y-3 font-bold uppercase italic tracking-widest italic tracking-tighter leading-none font-black italic">
+                        <p class="text-[10px] text-gray-400 text-center uppercase tracking-widest border-b pb-1 mb-2">Masuk Ke Rekening:</p>
+                        <button @click="lunasiFinal('Laci')" class="w-full bg-gray-50 border p-4 rounded-xl flex justify-between items-center font-bold text-xs uppercase hover:bg-blue-50 transition active:scale-95 shadow-sm"><span>1. TUNAI (KAS)</span><i class="fas fa-wallet text-green-600"></i></button>
+                        <button v-for="(v, k) in saldoAwal" v-if="k != 'Laci'" :key="k" @click="lunasiFinal(k)" class="w-full bg-gray-50 border p-4 rounded-xl flex justify-between items-center font-bold text-xs uppercase hover:bg-blue-50 transition active:scale-95 shadow-sm"><span>2. SALDO {{ k }}</span><i class="fas fa-university text-blue-600"></i></button>
                     </div>
                 </div>
-                <button @click="showPelunasan = false" class="w-full p-4 text-[10px] font-bold text-red-500 uppercase border-t active:bg-red-50">Batal</button>
+                <button @click="showPelunasan = false" class="w-full p-4 font-bold text-red-500 uppercase text-[10px] tracking-widest border-t active:bg-red-50 transition">Batal</button>
             </div>
         </div>
 
-        <div id="print-area" class="hidden thermal-font text-center font-bold">
-            <p style="font-size: 14px; text-transform: uppercase;">{{config.namaToko}}</p>
+        <div id="print-area" class="hidden thermal-font text-center uppercase font-bold">
+            <p style="font-size: 14px;">{{config.namaToko}}</p>
             <p style="font-size: 8px;">{{config.alamat}}</p>
             <p>==========================</p>
             <div style="text-align:left; font-size: 11px;" v-if="printData">
                 <p>JAM : {{printData.waktu}}</p>
-                <p>TIPE : {{printData.tipe.toUpperCase()}}</p>
-                <p>PEL : {{printData.nama}}</p>
-                <p style="font-weight:bold; font-size: 13px; border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px;">TOTAL: Rp {{formatUang(printData.total)}}</p>
+                <p>NAMA : {{printData.nama}}</p>
+                <p style="font-weight:bold; font-size: 13px; border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px;">TOTAL: Rp{{formatUang(printData.total)}}</p>
             </div>
             <p>==========================</p>
             <p style="font-size: 9px;">TERIMA KASIH</p>
@@ -273,7 +265,7 @@ new Vue({
         monitorCards() {
             return [
                 { key: 'aset', label: 'Aset Total', value: this.totalAset, text: 'text-blue-900' },
-                { key: 'laba_total', label: 'Profit Cloud', value: this.monitor.labaTotal + this.monitor.laba, text: 'text-green-800' },
+                { key: 'laba_total', label: 'Total Cloud', value: this.monitor.labaTotal + this.monitor.laba, text: 'text-green-800' },
                 { key: 'laba_sesi', label: 'Profit Sesi', value: this.monitor.laba, text: 'text-green-600' },
                 { key: 'piutang', label: 'Piutang', value: this.monitor.hutang, text: 'text-red-600' },
                 { key: 'tabungan', label: 'Tabungan', value: this.monitor.tabungan, text: 'text-yellow-600' },
@@ -286,10 +278,10 @@ new Vue({
         login: { email: '', pass: '' },
         config: { namaToko: 'AGEN BRI LINK BAROKAH', alamat: 'JL. RAYA UTAMA NO. 01' },
         tabs: [
-            {id:'input', label:'KASIR', icon: 'fas fa-cash-register'},
-            {id:'berhasil', label:'RIWAYAT', icon: 'fas fa-history'},
-            {id:'piutang', label:'PIUTANG', icon: 'fas fa-hand-holding-usd'},
-            {id:'akun', label:'PROFIL', icon: 'fas fa-user-circle'}
+            {id:'input', label:'Kasir', icon: 'fas fa-cash-register'},
+            {id:'berhasil', label:'Riwayat', icon: 'fas fa-history'},
+            {id:'piutang', label:'Piutang', icon: 'fas fa-hand-holding-usd'},
+            {id:'akun', label:'Toko', icon: 'fas fa-user-circle'}
         ],
         saldoAwal: { BRI: 0, Mandiri: 0, Dana: 0, Digipos: 0, Pulsa: 0, Laci: 0 },
         monitor: { laba: 0, hutang: 0, tabungan: 0, labaTotal: 0 },
@@ -302,41 +294,29 @@ new Vue({
         formatUang(val) { return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); },
         updateSaldo(e, k) { this.saldoAwal[k] = parseInt(e.target.value.replace(/\./g, '')) || 0; },
         updateForm(e, f) { this.form[f] = parseInt(e.target.value.replace(/\./g, '')) || 0; },
-        handleLogin() { 
-            auth.signInWithEmailAndPassword(this.login.email, this.login.pass)
-                .then(() => { this.isLoggedIn = true; this.fetchLabaTotal(); })
-                .catch(() => alert("Email/Sandi Salah!")); 
-        },
-        fetchLabaTotal() {
-            db.ref('laporan').once('value', (s) => {
-                let t = 0; s.forEach((c) => { t += c.val().totalLaba || 0; });
-                this.monitor.labaTotal = t;
-            });
-        },
+        handleLogin() { auth.signInWithEmailAndPassword(this.login.email, this.login.pass).then(() => { this.isLoggedIn = true; this.fetchLabaTotal(); }); },
+        fetchLabaTotal() { db.ref('laporan').once('value', (s) => { let t = 0; s.forEach((c) => { t += c.val().totalLaba || 0; }); this.monitor.labaTotal = t; }); },
         handleLogout() { auth.signOut().then(() => location.reload()); },
-        startSession() { if(this.saldoAwal.Laci <= 0) return alert("Isi Laci!"); this.sessionStarted = true; },
+        startSession() { if(this.saldoAwal.Laci <= 0) return alert("Isi Modal Kas Laci!"); this.sessionStarted = true; },
         async openPreview(status) {
             let total = this.form.nominal + this.form.adminToko;
             let laba = (this.tipe == 'transfer') ? this.form.adminToko - this.form.potonganBank : this.form.adminToko;
             this.printData = { waktu: new Date().toLocaleTimeString(), tipe: this.tipe, nama: this.form.nama, total, status, laba };
             this.saveFinal();
             
-            // Pop-up Bluetooth Trigger
             try {
-                const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] });
-                console.log("Printer selected:", device.name);
+                // Memicu jendela pop-up bluetooth printer sistem
+                await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] });
                 window.print();
             } catch (e) {
-                alert("Browser memanggil printer sistem. Silakan pilih printer Bluetooth Anda.");
-                window.print();
+                window.print(); // Fallback ke print biasa jika bluetooth ditolak
             }
         },
         saveFinal() {
-            const data = {...this.printData};
-            this.transaksiList.push(data);
-            this.monitor.laba += data.laba;
-            if(data.status == 'hutang') this.monitor.hutang += data.total;
-            else this.updateRealtime(data);
+            this.transaksiList.push({...this.printData});
+            this.monitor.laba += this.printData.laba;
+            if(this.printData.status == 'hutang') this.monitor.hutang += this.printData.total;
+            else this.updateRealtime(this.printData);
             this.isUploaded = false; 
             this.form = { nama: 'UMUM', nominal: 0, adminToko: 0, potonganBank: 0, bayar: 0, rekening: 'BRI', adminMethod: 'tunai' };
         },
@@ -345,14 +325,18 @@ new Vue({
                 this.saldoAwal[this.form.rekening] -= (this.form.nominal + this.form.potonganBank);
                 if(this.form.adminMethod == 'tunai') this.saldoAwal.Laci += (this.form.nominal + this.form.adminToko);
                 else this.saldoAwal.Laci += this.form.nominal;
-            } else if(data.tipe == 'tarik' || data.tipe == 'wesel') { // Wesel Terima Tunggal
+            } else if(data.tipe == 'tarik') { // Logika Tarik Tunai
                 this.saldoAwal[this.form.rekening] += this.form.nominal;
                 if(this.form.adminMethod == 'tunai') this.saldoAwal.Laci = (this.saldoAwal.Laci - this.form.nominal) + this.form.adminToko;
                 else this.saldoAwal.Laci -= this.form.nominal;
+            } else if(data.tipe == 'wesel') { // Wesel Terima Tunggal
+                this.saldoAwal[this.form.rekening] += this.form.nominal;
+                this.saldoAwal.Laci -= this.form.nominal;
             } else if(data.tipe == 'tabungan') {
                 this.saldoAwal.Laci += data.total; this.monitor.tabungan += data.total;
             } else if(data.tipe == 'pulsa') {
-                this.saldoAwal.Pulsa -= this.form.modal; this.saldoAwal.Laci += data.total;
+                this.saldoAwal.Pulsa -= (this.form.nominal - this.form.adminToko); // Estimasi modal pulsa
+                this.saldoAwal.Laci += data.total;
             }
         },
         reprint(data) { this.printData = data; setTimeout(() => window.print(), 500); },
@@ -364,19 +348,17 @@ new Vue({
             this.showPelunasan = false; this.isUploaded = false;
         },
         uploadData() {
-            db.ref('laporan/' + Date.now()).set({ transaksi: this.transaksiList, totalLaba: this.monitor.laba, tanggal: new Date().toLocaleDateString() }).then(() => { this.isUploaded = true; this.fetchLabaTotal(); alert("Data Tersimpan Di Cloud!"); });
+            db.ref('laporan/' + Date.now()).set({ transaksi: this.transaksiList, totalLaba: this.monitor.laba, tanggal: new Date().toLocaleDateString() })
+            .then(() => { this.isUploaded = true; this.fetchLabaTotal(); alert("Tersinkron Ke Firebase!"); });
         },
-        finishSession() {
-            if(!this.isUploaded) return alert("Upload Data Cloud Dulu!");
-            if(confirm("Akhiri Sesi? Sistem Akan Terkunci Kembali.")) { this.sessionStarted = false; }
-        },
+        finishSession() { if(!this.isUploaded) return alert("Upload Data Cloud Dulu!"); if(confirm("Tutup Sesi?")) { this.sessionStarted = false; } },
         downloadExcel() {
             const ws = XLSX.utils.json_to_sheet(this.transaksiList);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "BRI_Link_Report");
-            XLSX.writeFile(wb, `Report_${new Date().toLocaleDateString()}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+            XLSX.writeFile(wb, `Laporan_${new Date().toLocaleDateString()}.xlsx`);
         },
-        resetAllData() { if(confirm("Hapus Permanen Sesi Ini?")) { this.transaksiList = []; location.reload(); } }
+        resetAllData() { if(confirm("Hapus Semua Data?")) { this.transaksiList = []; location.reload(); } }
     }
 });
 </script>
