@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRI Link Pro - Pembukuan</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .thermal-print { font-family: 'Courier New', Courier, monospace; width: 58mm; font-size: 12px; }
+        @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; } }
+        .locked { filter: blur(2px); pointer-events: none; opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-gray-100 pb-20">
+<div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
+
+    <div v-if="!isLoggedIn" class="p-8 pt-20">
+        <h1 class="text-2xl font-bold text-blue-700 mb-6 text-center">BRI LINK PRO</h1>
+        <input v-model="login.email" type="email" placeholder="Email" class="w-full border p-3 rounded mb-4">
+        <input v-model="login.pass" type="password" placeholder="Password" class="w-full border p-3 rounded mb-4">
+        <button @click="handleLogin" class="w-full bg-blue-600 text-white p-3 rounded font-bold">LOGIN</button>
+    </div>
+
+    <div v-else>
+        <div class="sticky top-0 bg-blue-700 text-white p-4 z-10 shadow-md">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold uppercase">{{ config.namaToko }}</span>
+                <button @click="handleLogout" class="text-xs bg-red-500 px-2 py-1 rounded">Logout</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="bg-blue-800 p-2 rounded">Laba: <br><span class="text-lg font-bold">Rp {{ formatUang(monitor.laba) }}</span></div>
+                <div class="bg-red-800 p-2 rounded">Hutang: <br><span class="text-lg font-bold">Rp {{ formatUang(monitor.hutang) }}</span></div>
+            </div>
+        </div>
+
+        <div v-if="!sessionStarted" class="p-4 bg-yellow-50 border-b-4 border-yellow-400">
+            <h2 class="font-bold mb-3 text-yellow-800">SINKRONISASI SALDO AWAL</h2>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <input v-for="(val, key) in saldoAwal" :key="key" v-model.number="saldoAwal[key]" type="number" :placeholder="key" class="border p-2 rounded text-sm">
+            </div>
+            <button @click="startSession" class="w-full bg-yellow-500 text-white font-bold p-3 rounded">MULAI SESI (BUKA GEMBOK)</button>
+        </div>
+
+        <div :class="{ 'locked': !sessionStarted }" class="p-4">
+            <h3 class="font-bold mb-2">INPUT TRANSAKSI</h3>
+            <div class="flex gap-2 mb-4">
+                <button @click="tipe = 'transfer'" :class="tipe=='transfer'?'bg-blue-600 text-white':'bg-gray-200'" class="flex-1 py-2 rounded text-sm">Transfer</button>
+                <button @click="tipe = 'pulsa'" :class="tipe=='pulsa'?'bg-blue-600 text-white':'bg-gray-200'" class="flex-1 py-2 rounded text-sm">Pulsa/Token</button>
+            </div>
+
+            <div v-if="tipe == 'transfer'" class="space-y-2">
+                <select v-model="form.rekening" class="w-full border p-2 rounded">
+                    <option v-for="(v, k) in saldoAwal" :key="k" :value="k">{{ k }}</option>
+                </select>
+                <input v-model.number="form.nominal" type="number" placeholder="Nominal Transfer" class="w-full border p-2 rounded">
+                <input v-model.number="form.adminToko" type="number" placeholder="Admin Toko" class="w-full border p-2 rounded">
+                <input v-model.number="form.potonganBank" type="number" placeholder="Potongan Bank" class="w-full border p-2 rounded">
+            </div>
+
+            <div v-if="tipe == 'pulsa'" class="space-y-2">
+                <select v-model="form.rekening" class="w-full border p-2 rounded">
+                    <option value="Digipos">Digipos</option>
+                    <option value="Aplikasi Pulsa">Aplikasi Pulsa</option>
+                </select>
+                <input v-model.number="form.modal" type="number" placeholder="Harga Modal" class="w-full border p-2 rounded">
+                <input v-model.number="form.jual" type="number" placeholder="Harga Jual" class="w-full border p-2 rounded">
+            </div>
+
+            <input v-model="form.nama" type="text" placeholder="Nama Pelanggan (Opsional)" class="w-full border p-2 rounded mt-2">
+            
+            <div class="flex gap-2 mt-4">
+                <button @click="saveTransaksi('sukses')" class="flex-1 bg-green-600 text-white p-3 rounded font-bold">LUNAS</button>
+                <button @click="saveTransaksi('hutang')" class="flex-1 bg-red-600 text-white p-3 rounded font-bold">HUTANG</button>
+            </div>
+        </div>
+
+        <div v-if="sessionStarted" class="fixed bottom-0 max-w-md w-full bg-gray-200 p-4 border-t">
+            <button @click="uploadData" class="w-full bg-blue-700 text-white py-3 rounded-full font-bold shadow-lg">UPLOAD KE FIREBASE & TUTUP SESI</button>
+        </div>
+    </div>
+
+    <div id="print-area" class="hidden">
+        <div class="thermal-print text-center">
+            <p class="font-bold uppercase">{{ config.namaToko }}</p>
+            <p>{{ config.alamat }}</p>
+            <p>----------------------------</p>
+            <div v-if="printData" class="text-left">
+                <p>No: {{ printData.id }}</p>
+                <p>Tipe: {{ printData.tipe }}</p>
+                <p>Pelanggan: {{ printData.nama }}</p>
+                <p>Total: Rp {{ formatUang(printData.total) }}</p>
+                <p>Status: {{ printData.status.toUpperCase() }}</p>
+            </div>
+            <p>----------------------------</p>
+            <p>Terima Kasih</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// --- GANTI DENGAN CONFIG FIREBASE KAMU ---
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+new Vue({
+    el: '#app',
+    data: {
+        isLoggedIn: false,
+        sessionStarted: false,
+        tipe: 'transfer',
+        login: { email: '', pass: '' },
+        config: { namaToko: 'BRI Link Kita', alamat: 'Jl. Raya No. 1' },
+        saldoAwal: { BRI: 0, Mandiri: 0, Dana: 0, Digipos: 0, Pulsa: 0, Laci: 0 },
+        form: { rekening: 'BRI', nominal: 0, adminToko: 0, potonganBank: 0, modal: 0, jual: 0, nama: 'Umum' },
+        monitor: { laba: 0, hutang: 0 },
+        transaksiList: [],
+        printData: null
+    },
+    methods: {
+        handleLogin() {
+            auth.signInWithEmailAndPassword(this.login.email, this.login.pass)
+                .then(() => { this.isLoggedIn = true; })
+                .catch(err => alert(err.message));
+        },
+        handleLogout() { auth.signOut().then(() => { this.isLoggedIn = false; }); },
+        startSession() { this.sessionStarted = true; alert("Sesi Dimulai. Menu Terbuka!"); },
+        formatUang(val) { return val.toLocaleString('id-ID'); },
+        saveTransaksi(status) {
+            let laba = 0;
+            let total = 0;
+            if(this.tipe == 'transfer') {
+                laba = this.form.adminToko - this.form.potonganBank;
+                total = this.form.nominal + this.form.adminToko;
+            } else {
+                laba = this.form.jual - this.form.modal;
+                total = this.form.jual;
+            }
+
+            const data = {
+                id: Date.now(),
+                tipe: this.tipe,
+                nama: this.form.nama,
+                total: total,
+                laba: laba,
+                status: status,
+                rekening: this.form.rekening
+            };
+
+            this.transaksiList.push(data);
+            this.monitor.laba += laba;
+            if(status == 'hutang') this.monitor.hutang += total;
+
+            this.printData = data;
+            setTimeout(() => { window.print(); }, 500);
+            
+            // Reset Form
+            this.form.nominal = 0; this.form.adminToko = 0; this.form.nama = 'Umum';
+        },
+        uploadData() {
+            const dataToUpload = {
+                saldoAwal: this.saldoAwal,
+                transaksi: this.transaksiList,
+                totalLaba: this.monitor.laba,
+                tanggal: new Date().toISOString()
+            };
+            db.ref('pembukuan/' + Date.now()).set(dataToUpload).then(() => {
+                alert("Data Berhasil di-Upload ke Firebase!");
+                location.reload(); // Tutup sesi & Lock kembali
+            });
+        }
+    }
+});
+</script>
+</body>
+</html>
