@@ -29,8 +29,8 @@
 
 <div id="app" class="flex flex-col lg:flex-row min-h-screen">
     
-    <aside v-if="isLoggedIn" class="hidden lg:flex flex-col w-64 bg-blue-900 text-white h-screen sticky top-0 shadow-xl">
-        <div class="p-6 border-b border-blue-800 font-black italic text-center uppercase tracking-tighter">{{ config.namaToko }}</div>
+    <aside v-if="isLoggedIn" class="hidden lg:flex flex-col w-64 bg-blue-900 text-white h-screen sticky top-0 shadow-xl font-bold uppercase italic">
+        <div class="p-6 border-b border-blue-800 text-center uppercase tracking-tighter truncate">{{ config.namaToko }}</div>
         <nav class="flex-1 p-4 space-y-1 font-bold">
             <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" 
                 :class="activeTab == tab.id ? 'bg-blue-700 shadow-md' : 'hover:bg-blue-800'"
@@ -69,7 +69,7 @@
             
             <div v-if="activeTab == 'input'">
                 <div v-if="!sessionStarted" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border-t-8 border-yellow-500 text-center font-bold">
-                    <h2 class="text-lg mb-6">Input Modal Sesi</h2>
+                    <h2 class="text-lg font-bold mb-6">Input Modal Sesi</h2>
                     <div class="space-y-3 mb-8 text-left uppercase">
                         <div v-for="(v, k) in saldoAwal" :key="k">
                             <label class="text-[9px] font-bold text-gray-400">{{k}}</label>
@@ -99,7 +99,7 @@
                         </div>
                         <div v-else class="grid grid-cols-2 gap-4">
                             <div><label class="text-[9px] font-bold text-gray-400 uppercase">Nominal</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" class="w-full border p-3 rounded-xl font-bold text-right text-blue-700 bg-white"></div>
-                            <div v-if="tipe !== 'tabungan'"><label class="text-[9px] font-bold text-gray-400">Admin</label><input :value="formatUang(form.adminToko)" @input="updateForm($event, 'adminToko')" class="w-full border p-3 rounded-xl font-bold text-right text-green-700 bg-white shadow-inner"></div>
+                            <div v-if="tipe !== 'tabungan'"><label class="text-[9px] font-bold text-gray-400 uppercase">Admin</label><input :value="formatUang(form.adminToko)" @input="updateForm($event, 'adminToko')" class="w-full border p-3 rounded-xl font-bold text-right text-green-700 bg-white shadow-inner"></div>
                         </div>
 
                         <div v-if="tipe == 'transfer'"><label class="text-[9px] font-bold text-red-500 uppercase ml-1">Fee Modal Bank</label><input :value="formatUang(form.potonganBank)" @input="updateForm($event, 'potonganBank')" class="w-full border-2 border-red-100 p-3 rounded-xl text-right text-red-600 font-bold"></div>
@@ -160,7 +160,7 @@
                         <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 leading-none"><p class="text-[8px] font-bold text-indigo-400 mb-1 uppercase">Tahun Ini</p><p class="text-lg font-bold text-indigo-700">Rp{{ formatUang(monitor.labaTahun) }}</p></div>
                     </div>
                     <button @click="uploadData" class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold uppercase text-[10px] shadow active:scale-95 transition mb-2">Upload Ke Cloud</button>
-                    <button @click="exportSemuaLaporan" class="w-full bg-green-700 text-white py-4 rounded-xl font-bold uppercase text-[10px] shadow transition hover:bg-green-800"><i class="fas fa-file-excel mr-2"></i> Ekspor Laporan Excel</button>
+                    <button @click="exportSemuaLaporan" class="w-full bg-green-700 text-white py-4 rounded-xl font-bold uppercase text-[10px] shadow transition hover:bg-green-800 leading-none"><i class="fas fa-file-excel mr-2"></i> Ekspor Laporan Excel</button>
                 </div>
             </div>
 
@@ -200,7 +200,11 @@
                             <p>JAM : {{ printData.jam }}</p>
                             <p>PEL : {{ printData.nama }}</p>
                             <p>TIPE: {{ printData.tipe.toUpperCase() }}</p>
+                            <p style="margin: 5px 0;">--------------------------------</p>
+                            <p>NOMINAL: Rp {{ formatUang(printData.nom) }}</p>
+                            <p>ADMIN  : Rp {{ formatUang(printData.admT) }}</p>
                             <p style="font-weight:900; font-size: 13px; border-top: 1px dashed #000; padding: 5px 0; margin-top: 5px;">TOTAL: Rp {{ formatUang(printData.total) }}</p>
+                            <p style="font-size: 11px; margin-top: 5px; text-align: center; border: 1px solid #000; padding: 2px;">STATUS: {{ printData.status == 'sukses' ? 'LUNAS' : 'BON/HUTANG' }}</p>
                         </div>
                         <p style="margin: 5px 0;">--------------------------------</p>
                         <p style="font-size: 10px; font-weight: 900;">*** TERIMA KASIH ***</p>
@@ -307,9 +311,26 @@ new Vue({
 
         openModalPreview(status) {
             const d = new Date();
-            let total = (this.tipe == 'pulsa') ? this.form.nominal : (this.form.nominal + this.form.adminToko);
-            let laba = (this.tipe == 'transfer') ? this.form.adminToko - this.form.potonganBank : (this.tipe == 'pulsa') ? this.form.nominal - this.form.modal : this.form.adminToko;
-            this.printData = { tanggal: d.toLocaleDateString('id-ID'), jam: d.toLocaleTimeString('id-ID'), tipe: this.tipe, nama: this.form.nama, total, status, laba, rek: this.form.rekening, admM: this.form.adminMethod, nom: this.form.nominal, admT: this.form.adminToko, pb: this.form.potonganBank };
+            const nominal = parseInt(this.form.nominal) || 0;
+            const admin = parseInt(this.form.adminToko) || 0;
+            const subtotal = (this.tipe == 'pulsa') ? nominal : (nominal + admin);
+            
+            let laba = (this.tipe == 'transfer') ? admin - (parseInt(this.form.potonganBank) || 0) : (this.tipe == 'pulsa') ? nominal - (parseInt(this.form.modal) || 0) : admin;
+            
+            this.printData = { 
+                tanggal: d.toLocaleDateString('id-ID'), 
+                jam: d.toLocaleTimeString('id-ID'), 
+                tipe: this.tipe, 
+                nama: this.form.nama, 
+                nom: nominal, 
+                adm: admin, 
+                total: subtotal, 
+                status, 
+                laba, 
+                rek: this.form.rekening, 
+                admM: this.form.adminMethod, 
+                pb: this.form.potonganBank 
+            };
             this.isPreviewOpen = true;
         },
 
@@ -325,11 +346,11 @@ new Vue({
 
         updateRealtime(data) {
             if(data.tipe == 'transfer') {
-                this.saldoAwal[data.rek] -= (data.nom + data.pb);
+                this.saldoAwal[data.rek] -= (data.nom + (parseInt(data.pb) || 0));
                 if(data.admM == 'tunai') this.saldoAwal.Laci += data.total; else this.saldoAwal.Laci += data.nom;
             } else if(data.tipe == 'tarik' || data.tipe == 'wesel') {
                 this.saldoAwal[data.rek] += data.nom;
-                if(data.admM == 'tunai') this.saldoAwal.Laci = (this.saldoAwal.Laci - data.nom) + data.admT; else this.saldoAwal.Laci -= data.nom;
+                if(data.admM == 'tunai') this.saldoAwal.Laci = (this.saldoAwal.Laci - data.nom) + data.adm; else this.saldoAwal.Laci -= data.nom;
             } else if(data.tipe == 'tabungan') { this.saldoAwal.Laci += data.total; this.monitor.tabungan += data.total; }
             else if(data.tipe == 'pulsa') { this.saldoAwal.Pulsa -= (data.nom - data.laba); this.saldoAwal.Laci += data.total; }
         },
@@ -340,11 +361,11 @@ new Vue({
                 t.status = 'hutang';
                 this.monitor.hutang += t.total;
                 if(t.tipe == 'transfer') {
-                    this.saldoAwal[t.rek] += (t.nom + t.pb);
+                    this.saldoAwal[t.rek] += (t.nom + (parseInt(t.pb) || 0));
                     if(t.admM == 'tunai') this.saldoAwal.Laci -= t.total; else this.saldoAwal.Laci -= t.nom;
                 } else if(t.tipe == 'tarik' || t.tipe == 'wesel') {
                     this.saldoAwal[t.rek] -= t.nom;
-                    if(t.admM == 'tunai') this.saldoAwal.Laci -= (t.admT - t.nom); else this.saldoAwal.Laci += t.nom;
+                    if(t.admM == 'tunai') this.saldoAwal.Laci -= (t.adm - t.nom); else this.saldoAwal.Laci += t.nom;
                 } else if(t.tipe == 'tabungan') { this.saldoAwal.Laci -= t.total; this.monitor.tabungan -= t.total; }
                 this.updateCloud();
             }
@@ -353,25 +374,14 @@ new Vue({
         async printDirectBluetooth() {
             this.saveFinal();
             const encoder = new TextEncoder();
-            // ESC/POS Commands: Center Align + Bold
-            const INIT = "\x1B\x40";
-            const CENTER = "\x1B\x61\x01";
-            const LEFT = "\x1B\x61\x00";
-            const BOLD_ON = "\x1B\x45\x01";
-            const BOLD_OFF = "\x1B\x45\x00";
-            const LARGE_ON = "\x1D\x21\x11";
-            const LARGE_OFF = "\x1D\x21\x00";
+            const INIT = "\x1B\x40", CENTER = "\x1B\x61\x01", LEFT = "\x1B\x61\x00", BOLD_ON = "\x1B\x45\x01", BOLD_OFF = "\x1B\x45\x00", LARGE_ON = "\x1D\x21\x11", LARGE_OFF = "\x1D\x21\x00";
 
             let txt = INIT + CENTER + BOLD_ON + LARGE_ON + this.config.namaToko + LARGE_OFF + "\n";
-            txt += BOLD_OFF + this.config.nomorHp + "\n";
-            txt += this.config.alamat + "\n";
-            txt += "--------------------------------\n" + LEFT;
-            txt += "TGL : " + this.printData.tanggal + "\n";
-            txt += "JAM : " + this.printData.jam + "\n";
-            txt += "PEL : " + this.printData.nama + "\n";
-            txt += "TIPE: " + this.printData.tipe.toUpperCase() + "\n";
-            txt += "--------------------------------\n" + BOLD_ON;
-            txt += "TOTAL: Rp" + this.formatUang(this.printData.total) + "\n" + BOLD_OFF;
+            txt += BOLD_OFF + this.config.nomorHp + "\n" + this.config.alamat + "\n--------------------------------\n" + LEFT;
+            txt += "TGL : " + this.printData.tanggal + "\nJAM : " + this.printData.jam + "\nPEL : " + this.printData.nama + "\n--------------------------------\n";
+            txt += "NOMINAL : Rp" + this.formatUang(this.printData.nom) + "\nADMIN   : Rp" + this.formatUang(this.printData.adm) + "\n--------------------------------\n" + BOLD_ON;
+            txt += "TOTAL   : Rp" + this.formatUang(this.printData.total) + "\n" + BOLD_OFF;
+            txt += "STATUS  : " + (this.printData.status == 'sukses' ? 'LUNAS' : 'BON/HUTANG') + "\n";
             txt += CENTER + "\n*** TERIMA KASIH ***\n\n\n\n\n";
 
             try {
@@ -381,7 +391,7 @@ new Vue({
                 const char = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
                 await char.writeValue(encoder.encode(txt));
                 setTimeout(() => device.gatt.disconnect(), 1000);
-            } catch (e) { alert("Bluetooth Dibatalkan."); }
+            } catch (e) { window.print(); }
             this.isPreviewOpen = false;
         },
 
