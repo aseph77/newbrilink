@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BRI Link Pro - Enterprise v65 Final</title>
+    <title>BRI Link Pro - Master v67 Reversal Lock</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -32,7 +32,7 @@
     <div v-if="isLoggedIn" class="flex flex-col lg:flex-row min-h-screen">
         <aside class="hidden lg:flex flex-col w-64 bg-blue-900 text-white h-screen sticky top-0 shadow-xl italic font-black">
             <div class="p-6 border-b border-blue-800 text-center truncate uppercase">{{ config.namaToko }}</div>
-            <nav class="flex-1 p-4 space-y-1">
+            <nav class="flex-1 p-4 space-y-1 font-black">
                 <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="activeTab == tab.id ? 'bg-blue-700 shadow-md' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm">
                     <i :class="tab.icon"></i> {{ tab.label }}
                 </button>
@@ -42,12 +42,12 @@
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col h-screen overflow-hidden">
-            <header class="bg-white shadow-sm border-b sticky top-0 z-50 font-black">
+        <main class="flex-1 flex flex-col h-screen overflow-hidden font-black">
+            <header class="bg-white shadow-sm border-b sticky top-0 z-50">
                 <div class="flex gap-2 p-3 overflow-x-auto no-scrollbar bg-gray-50">
                     <div v-for="m in monitorCards" :key="m.key" class="card-monitor flex-shrink-0 p-3 rounded-xl shadow-sm flex flex-col justify-center">
-                        <p class="text-[8px] text-gray-400 uppercase leading-none mb-1 font-black">{{ m.label }}</p>
-                        <p :class="m.text" class="text-xs font-black font-black">Rp{{ formatUang(m.value) }}</p>
+                        <p class="text-[8px] text-gray-400 uppercase leading-none mb-1">{{ m.label }}</p>
+                        <p :class="m.text" class="text-xs font-black">Rp{{ formatUang(m.value) }}</p>
                     </div>
                 </div>
                 <div class="flex gap-4 p-2 px-4 overflow-x-auto no-scrollbar bg-white text-[9px] text-blue-600 border-t italic font-black">
@@ -57,168 +57,134 @@
                 </div>
             </header>
 
-            <section class="flex-1 overflow-y-auto p-4 pb-32 no-scrollbar font-black uppercase">
-                <div v-if="activeTab == 'dashboard'" class="max-w-4xl mx-auto space-y-6">
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border font-black"><canvas id="incomeChart"></canvas></div>
-                </div>
-
+            <section class="flex-1 overflow-y-auto p-4 pb-32 no-scrollbar uppercase">
                 <div v-if="activeTab == 'input'">
                     <div v-if="!sessionStarted" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-xl border-t-4 border-yellow-500 text-center">
-                        <h2 class="mb-4 italic">Buka Kasir</h2>
-                        <div v-for="(v, k) in saldoAwal" :key="k" class="mb-2 text-left">
-                            <label class="text-[9px] text-gray-400">{{k}}</label>
-                            <input :value="formatUang(saldoAwal[k])" @input="updateSaldo($event, k)" class="w-full border p-2 rounded-lg text-right text-blue-900 bg-gray-50 font-black outline-none">
+                        <h2 class="mb-4 italic">Mulai Sesi</h2>
+                        <div v-for="(v, k) in saldoAwal" :key="k" class="mb-2 text-left font-black">
+                            <label class="text-[9px] text-gray-400 uppercase">{{k}}</label>
+                            <input :value="formatUang(saldoAwal[k])" @input="updateSaldo($event, k)" class="w-full border p-2 rounded-lg text-right text-blue-900 bg-gray-50 font-black">
                         </div>
-                        <button @click="startSession" class="w-full bg-blue-700 text-white py-4 rounded-xl mt-4 font-black shadow">MULAI SESI</button>
+                        <button @click="startSession" class="w-full bg-blue-700 text-white py-4 rounded-xl mt-4 font-black">BUKA SESI</button>
                     </div>
 
                     <div v-else class="max-w-2xl mx-auto space-y-4">
-                        <div class="bg-white p-5 rounded-3xl border shadow-sm space-y-4">
-                            <div class="flex gap-1 p-1 bg-gray-100 rounded-xl overflow-x-auto no-scrollbar font-black">
+                        <div class="bg-white p-5 rounded-3xl border shadow-sm space-y-4 font-black">
+                            <div class="flex gap-1 p-1 bg-gray-100 rounded-xl overflow-x-auto no-scrollbar">
                                 <button v-for="t in ['transfer','tarik','pulsa','tabungan','barang','wesel','paylater','migrasi']" :key="t" @click="tipe = t" :class="tipe == t ? 'bg-white shadow text-blue-700' : 'text-gray-400'" class="px-2 py-2.5 rounded-lg font-bold text-[8px] transition flex-1 uppercase">{{t}}</button>
                             </div>
 
-                            <div class="space-y-3 font-black uppercase">
-                                <div v-if="tipe == 'barang'" class="space-y-4 font-black">
-                                    <label class="text-[9px] text-gray-400">PILIH BARANG / VOUCHER</label>
-                                    <select v-model="selectedBarangId" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm outline-none">
-                                        <option :value="null">-- PILIH BARANG --</option>
-                                        <option v-for="(b, id) in gudang" :key="id" :value="id">{{ b.nama }} (SISA: {{ b.stok }})</option>
-                                    </select>
-                                    <div v-if="selectedBarangId" class="grid grid-cols-2 gap-3 font-black">
-                                        <div><label class="text-[9px] text-gray-400">HARGA JUAL</label><div class="p-3 bg-gray-50 rounded-xl border text-xs">Rp{{ formatUang(gudang[selectedBarangId].jual) }}</div></div>
-                                        <div><label class="text-[9px] text-gray-400">QTY</label><input v-model.number="jumlahBeli" type="number" min="1" class="w-full border p-3 rounded-xl text-center bg-white font-black"></div>
+                            <div class="space-y-3 font-black">
+                                <div v-if="tipe == 'barang'" class="space-y-4">
+                                    <label class="text-[9px] text-gray-400">PILIH ITEM</label>
+                                    <select v-model="selectedBarangId" class="w-full border p-3 rounded-xl bg-white text-xs font-black"><option :value="null">-- PILIH BARANG --</option><option v-for="(b, id) in gudang" :key="id" :value="id">{{ b.nama }} (SISA: {{ b.stok }})</option></select>
+                                    <div v-if="selectedBarangId" class="grid grid-cols-2 gap-3">
+                                        <div><label class="text-[9px] text-gray-400">HARGA</label><div class="p-3 bg-gray-50 rounded-xl border text-xs">Rp{{ formatUang(gudang[selectedBarangId].jual) }}</div></div>
+                                        <div><label class="text-[9px] text-gray-400">QTY</label><input v-model.number="jumlahBeli" type="number" class="w-full border p-3 rounded-xl text-center bg-white font-black"></div>
                                     </div>
                                     <div v-if="selectedBarangId" class="p-4 bg-blue-700 text-white rounded-2xl flex justify-between items-center shadow-lg"><span class="text-xs">TOTAL BELANJA:</span><span class="text-xl font-black">Rp{{ formatUang(totalBelanjaBarang) }}</span></div>
                                     <div v-if="selectedBarangId" class="grid grid-cols-2 gap-4 items-center bg-yellow-50 p-4 rounded-2xl border border-yellow-200">
                                         <div><label class="text-[9px] text-yellow-600">BAYAR</label><input :value="formatUang(form.bayar)" @input="updateForm($event, 'bayar')" class="w-full border-b-2 border-yellow-400 bg-transparent p-1 font-black text-right outline-none text-lg"></div>
-                                        <div class="text-right"><p class="text-[8px] text-yellow-600">KEMBALI</p><p class="text-lg text-red-600 font-black">Rp{{ formatUang(kembalianBarang) }}</p></div>
+                                        <div class="text-right font-black"><p class="text-[8px] text-yellow-600 font-black">KEMBALI</p><p class="text-lg text-red-600">Rp{{ formatUang(kembalianBarang) }}</p></div>
                                     </div>
-                                    <div v-if="selectedBarangId" class="grid grid-cols-2 gap-2 mt-2">
-                                        <button @click="openPreview('sukses', true)" class="bg-blue-700 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase">LUNAS & CETAK</button>
-                                        <button @click="openPreview('hutang', true)" class="bg-red-600 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase">SIMPAN HUTANG</button>
+                                    <div v-if="selectedBarangId" class="grid grid-cols-2 gap-2">
+                                        <button @click="openPreview('sukses', true)" class="bg-blue-700 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase">Lunas & Cetak</button>
+                                        <button @click="openPreview('hutang', true)" class="bg-red-600 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase">Simpan Hutang</button>
                                     </div>
                                 </div>
-
-                                <div v-else-if="tipe == 'tabungan'" class="space-y-4">
-                                    <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl">
-                                        <button @click="modeTabungan = 'setor'" :class="modeTabungan == 'setor' ? 'bg-blue-600 text-white shadow' : ''" class="py-2 rounded-lg text-[10px]">SETOR</button>
-                                        <button @click="modeTabungan = 'tarik'" :class="modeTabungan == 'tarik' ? 'bg-red-600 text-white shadow' : ''" class="py-2 rounded-lg text-[10px]">TARIK</button>
-                                    </div>
-                                    <label class="text-[9px] text-gray-400">JALUR DANA</label>
-                                    <select v-model="form.rekening" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm"><option v-for="(v, k) in saldoAwal" v-if="k != 'Pulsa' && k != 'Digipos'" :key="k" :value="k">{{k}}</option></select>
-                                    <input v-model="form.nama" type="text" placeholder="NAMA NASABAH" class="w-full border p-3 rounded-xl text-xs bg-gray-50 font-black uppercase">
-                                    <input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" class="w-full border p-3 rounded-xl font-black text-right text-blue-700 bg-white" placeholder="NOMINAL">
-                                    <button @click="openPreview('sukses', true)" class="w-full bg-blue-700 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase mt-4">Simpan Lunas & Cetak</button>
-                                </div>
-
-                                <div v-else class="space-y-3 font-black">
+                                <div v-else class="space-y-3">
                                     <div v-if="tipe == 'migrasi'" class="grid grid-cols-2 gap-3">
                                         <div><label class="text-[9px] text-gray-400">DARI</label><select v-model="form.rekening" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm"><option v-for="(v, k) in saldoAwal" :key="k" :value="k">{{k}}</option></select></div>
                                         <div><label class="text-[9px] text-gray-400">KE</label><select v-model="form.targetBank" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm"><option v-for="(v, k) in saldoAwal" :key="k" :value="k">{{k}}</option></select></div>
                                     </div>
-                                    <div v-else-if="tipe !== 'keluar'"><label class="text-[9px] text-gray-400">AKUN/BANK</label><select v-model="form.rekening" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm"><option v-for="(v, k) in saldoAwal" v-if="k != 'Laci' && k != 'Pulsa' && k != 'Digipos'" :key="k" :value="k">{{k}}</option></select></div>
-                                    <input v-if="tipe !== 'migrasi'" v-model="form.nama" type="text" placeholder="NAMA PELANGGAN" class="w-full border p-3 rounded-xl text-xs bg-gray-50 uppercase font-black">
+                                    <div v-else-if="tipe == 'tabungan'" class="space-y-4 font-black">
+                                        <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl">
+                                            <button @click="modeTabungan = 'setor'" :class="modeTabungan == 'setor' ? 'bg-blue-600 text-white shadow' : ''" class="py-2 rounded-lg text-[10px]">SETOR (LACI +)</button>
+                                            <button @click="modeTabungan = 'tarik'" :class="modeTabungan == 'tarik' ? 'bg-red-600 text-white shadow' : ''" class="py-2 rounded-lg text-[10px]">TARIK (SALDO -)</button>
+                                        </div>
+                                        <label class="text-[9px] text-gray-400 uppercase">Jalur Uang</label>
+                                        <select v-model="form.rekening" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm"><option v-for="(v, k) in saldoAwal" v-if="k != 'Pulsa' && k != 'Digipos'" :key="k" :value="k">{{k}}</option></select>
+                                    </div>
+                                    <div v-else-if="tipe !== 'keluar'"><label class="text-[9px] text-gray-400 uppercase font-black">Bank/Aplikasi</label><select v-model="form.rekening" class="w-full border p-3 rounded-xl bg-white text-xs font-black shadow-sm font-black font-black"><option v-for="(v, k) in saldoAwal" v-if="k != 'Laci' && k != 'Pulsa' && k != 'Digipos'" :key="k" :value="k">{{k}}</option></select></div>
+                                    
+                                    <input v-if="tipe !== 'migrasi'" v-model="form.nama" type="text" placeholder="NAMA PELANGGAN" class="w-full border p-3 rounded-xl text-xs bg-gray-50 uppercase font-black font-black">
                                     <div class="grid grid-cols-2 gap-3">
-                                        <div><label class="text-[9px] text-gray-400">NOMINAL</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" class="w-full border p-3 rounded-xl font-black text-right text-blue-700 bg-white"></div>
-                                        <div v-if="!['tabungan','migrasi','keluar'].includes(tipe)"><label class="text-[9px] text-gray-400 uppercase font-black">{{tipe=='paylater'?'BIAYA':'ADMIN'}}</label><input :value="formatUang(tipe=='pulsa'?form.modal:form.adminToko)" @input="updateForm($event, tipe=='pulsa'?'modal':'adminToko')" class="w-full border p-3 rounded-xl font-black text-right text-green-700 bg-white"></div>
+                                        <div><label class="text-[9px] text-gray-400">NOMINAL</label><input :value="formatUang(form.nominal)" @input="updateForm($event, 'nominal')" class="w-full border p-3 rounded-xl font-black text-right text-blue-700 bg-white shadow-inner font-black"></div>
+                                        <div v-if="!['tabungan','migrasi','keluar'].includes(tipe)"><label class="text-[9px] text-gray-400 uppercase font-black">{{tipe=='paylater'?'BIAYA':'ADMIN'}}</label><input :value="formatUang(tipe=='pulsa'?form.modal:form.adminToko)" @input="updateForm($event, tipe=='pulsa'?'modal':'adminToko')" class="w-full border p-3 rounded-xl font-black text-right text-green-700 bg-white font-black"></div>
                                     </div>
-                                    <div v-if="tipe == 'transfer'"><label class="text-[9px] text-red-500 uppercase">Admin Bank (Modal)</label><input :value="formatUang(form.potonganBank)" @input="updateForm($event, 'potonganBank')" class="w-full border-2 border-red-100 p-3 rounded-xl text-right text-red-600 font-black"></div>
-                                    <div v-if="!['migrasi','keluar','barang','tabungan'].includes(tipe)" class="grid grid-cols-2 gap-2 mt-4">
-                                        <button @click="openPreview(tipe == 'paylater' ? 'hutang' : 'sukses', false)" class="bg-gray-800 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase">Hanya Simpan</button>
-                                        <button @click="openPreview(tipe == 'paylater' ? 'hutang' : 'sukses', true)" class="bg-blue-700 text-white py-4 rounded-xl font-black text-[10px] shadow uppercase font-black">Simpan & Cetak</button>
+                                    <div v-if="tipe == 'transfer'"><label class="text-[9px] text-red-500 font-black uppercase">Admin Bank</label><input :value="formatUang(form.potonganBank)" @input="updateForm($event, 'potonganBank')" class="w-full border-2 border-red-100 p-3 rounded-xl text-right text-red-600 font-black"></div>
+                                    <div v-if="['transfer','tarik','wesel','paylater'].includes(tipe)" class="p-3 bg-gray-50 rounded-xl border italic text-[9px] space-y-2">
+                                        <p class="text-gray-400 uppercase">Metode Admin:</p>
+                                        <div class="flex gap-4 font-black">
+                                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" v-model="form.adminMethod" value="tunai"> TUNAI (LACI)</label>
+                                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" v-model="form.adminMethod" value="potong"> SALDO BANK</label>
+                                        </div>
                                     </div>
-                                    <button v-if="!['migrasi','keluar','paylater','tabungan','barang'].includes(tipe)" @click="openPreview('hutang', true)" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-[10px] shadow mt-2 uppercase">Simpan Bon & Cetak</button>
+                                    <div v-if="!['migrasi','barang','tabungan'].includes(tipe)" class="grid grid-cols-2 gap-2 mt-4"><button @click="openPreview(tipe == 'paylater' ? 'hutang' : 'sukses', false)" class="bg-gray-800 text-white py-4 rounded-xl font-black text-[10px] uppercase">Simpan Saja</button><button @click="openPreview(tipe == 'paylater' ? 'hutang' : 'sukses', true)" class="bg-blue-700 text-white py-4 rounded-xl font-black text-[10px] uppercase">Simpan & Struk</button></div>
+                                    <button v-if="!['migrasi','keluar','paylater','tabungan','barang'].includes(tipe)" @click="openPreview('hutang', true)" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-[10px] shadow mt-2 uppercase">Simpan Bon</button>
                                 </div>
                             </div>
-                        </div>
-
-                        <div v-if="tipe == 'tabungan'" class="bg-white p-6 rounded-3xl border shadow-sm font-black">
-                            <h3 class="text-xs mb-4 text-blue-800 italic uppercase">Daftar Buku Tabungan</h3>
-                            <div v-for="(saldo, nama) in nasabahList" :key="nama" @click="showDetailNasabah(nama)" class="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-dashed mb-2 cursor-pointer hover:bg-blue-50 transition"><span class="text-[10px]">{{ nama }}</span><div class="text-right font-black"><p class="text-xs text-blue-700">Rp{{ formatUang(saldo) }}</p><p class="text-[7px] text-gray-400">RIWAYAT / CETAK</p></div></div>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="activeTab == 'gudang'" class="max-w-4xl mx-auto space-y-6 font-black uppercase">
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
-                        <h2 class="italic border-b pb-4 text-blue-800">Manajemen Gudang</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-black">
-                            <div><label class="text-[9px] text-gray-400 block mb-1">NAMA BARANG</label><input v-model="newItem.nama" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
-                            <div><label class="text-[9px] text-gray-400 block mb-1">STOK BELI</label><input v-model.number="newItem.stok" type="number" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
-                            <div><label class="text-[9px] text-gray-400 block mb-1">MODAL BELI / PCS</label><input v-model.number="newItem.modal" type="number" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
-                            <div><label class="text-[9px] text-gray-400 block mb-1">HARGA JUAL / PCS</label><input v-model.number="newItem.jual" type="number" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
-                        </div>
-                        <div class="p-4 bg-yellow-50 rounded-xl"><label class="text-[9px] text-gray-400">SUMBER MODAL:</label><select v-model="paymentSource" class="w-full border p-3 rounded-xl bg-white text-xs font-black font-black"><option v-for="(v, k) in saldoAwal" :key="k" :value="k">{{ k }}</option></select></div>
-                        <button @click="restockItem" class="w-full bg-green-600 text-white py-4 rounded-xl font-black uppercase shadow active:scale-95">TAMBAH STOK</button>
+                <div v-if="activeTab == 'berhasil'" class="max-w-4xl mx-auto space-y-4 font-black">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        <button v-for="f in ['semua','transfer','tarik','pulsa','tabungan','wesel','paylater','barang']" @click="filterRiwayat = f" :class="filterRiwayat == f ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-400'" class="px-4 py-2 rounded-full text-[9px] font-black uppercase flex-shrink-0 transition">{{f}}</button>
                     </div>
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border font-black"><div v-for="(b, id) in gudang" :key="id" class="flex justify-between items-center p-4 border-b"><div><p class="text-xs">{{ b.nama }}</p><p class="text-[8px] text-gray-400 uppercase">SISA: {{ b.stok }} | JUAL: Rp{{ formatUang(b.jual) }}</p></div><button @click="deleteItem(id)" class="text-red-500 bg-red-50 p-2 rounded-lg"><i class="fas fa-trash"></i></button></div></div>
+                    <div v-for="(t, i) in filteredRiwayat" :key="i" class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm italic uppercase font-black font-black">
+                        <div class="flex-1 truncate pr-2 font-black font-black">
+                            <span :class="['keluar','paylater'].includes(t.tipe) ? 'text-red-600' : 'text-gray-800'" class="text-[10px] block truncate mb-1">[{{t.tipe.toUpperCase()}}] {{t.nama}}</span>
+                            <span class="text-[8px] text-gray-400 font-black">{{t.tanggal}} | Rp{{formatUang(t.total)}}</span>
+                        </div>
+                        <div class="flex gap-2 font-black font-black">
+                            <button @click="handleReprint(t)" class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg font-black font-black"><i class="fas fa-print"></i></button>
+                            <button @click="deleteTransaction(t)" class="bg-red-50 text-red-600 w-8 h-8 rounded-lg border border-red-100 font-black font-black"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="activeTab == 'gudang'" class="max-w-4xl mx-auto space-y-6 uppercase font-black">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border space-y-4 font-black font-black">
+                        <h2 class="italic border-b pb-4 text-blue-800">Gudang Barang</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="text-[9px] text-gray-400 block mb-1">NAMA BARANG</label><input v-model="newItem.nama" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
+                            <div><label class="text-[9px] text-gray-400 block mb-1">STOK</label><input v-model.number="newItem.stok" type="number" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
+                            <div><label class="text-[9px] text-gray-400 block mb-1">MODAL / PCS</label><input v-model.number="newItem.modal" type="number" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
+                            <div><label class="text-[9px] text-gray-400 block mb-1">JUAL / PCS</label><input v-model.number="newItem.jual" type="number" class="w-full border p-3 rounded-xl text-xs font-black bg-gray-50"></div>
+                        </div>
+                        <div class="p-4 bg-yellow-50 rounded-xl font-black font-black"><label class="text-[9px] text-gray-400 block mb-1">DIBAYAR DARI:</label><select v-model="paymentSource" class="w-full border p-3 rounded-xl bg-white text-xs font-black font-black font-black font-black"><option v-for="(v, k) in saldoAwal" :key="k" :value="k">{{ k }}</option></select></div>
+                        <button @click="restockItem" class="w-full bg-green-600 text-white py-4 rounded-xl font-black uppercase shadow">TAMBAH KE GUDANG</button>
+                    </div>
                 </div>
 
                 <div v-if="activeTab == 'akun'" class="max-w-xl mx-auto space-y-6 italic font-black uppercase">
                     <div class="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
-                        <h2 class="font-black border-b pb-4">Setelan Branding</h2>
-                        <div><label class="text-[10px] text-gray-400">NAMA AGEN</label><input v-model="config.namaToko" class="w-full border-2 p-3 rounded-xl bg-gray-50 text-sm font-black"></div>
-                        <div><label class="text-[10px] text-gray-400">ALAMAT</label><textarea v-model="config.alamat" class="w-full border-2 p-3 rounded-xl bg-gray-50 h-20 text-sm font-black"></textarea></div>
+                        <h2 class="font-black border-b pb-4">Branding Agen</h2>
+                        <div><label class="text-[10px] text-gray-400">NAMA AGEN</label><input v-model="config.namaToko" class="w-full border-2 p-3 rounded-xl bg-gray-50 text-sm font-black uppercase font-black font-black"></div>
                         <div><label class="text-[10px] text-gray-400">WA AGEN</label><input v-model="config.nomorHp" class="w-full border-2 p-3 rounded-xl bg-gray-50 text-sm font-black"></div>
-                        <div><label class="text-[10px] text-gray-400">FOOTER STRUK</label><input v-model="config.footer" class="w-full border-2 p-3 rounded-xl bg-gray-50 text-sm font-black"></div>
-                        <button @click="saveConfig" class="w-full bg-blue-700 text-white py-3 rounded-xl shadow font-black">SIMPAN PROFIL</button>
+                        <div><label class="text-[10px] text-gray-400">ALAMAT</label><textarea v-model="config.alamat" class="w-full border-2 p-3 rounded-xl bg-gray-50 h-20 text-sm font-black uppercase font-black"></textarea></div>
+                        <div><label class="text-[10px] text-gray-400">FOOTER STRUK</label><input v-model="config.footer" class="w-full border-2 p-3 rounded-xl bg-gray-50 text-sm font-black uppercase font-black"></div>
+                        <button @click="saveConfig" class="w-full bg-blue-700 text-white py-3 rounded-xl shadow font-black font-black">SIMPAN PROFIL</button>
                     </div>
                     <div class="bg-white p-8 rounded-3xl border shadow-sm space-y-4">
-                        <h2 class="font-black border-b pb-4">Daftar Akun Saldo</h2>
-                        <div v-for="(v, k) in saldoAwal" :key="k" class="flex items-center gap-2"><input :value="k" class="flex-1 border p-2 rounded-lg text-[10px] bg-gray-100 uppercase" disabled><button v-if="k !== 'Laci'" @click="deleteColumn(k)" class="bg-red-100 text-red-600 p-2 rounded-lg"><i class="fas fa-trash"></i></button></div>
-                        <div class="pt-4 flex gap-2"><input v-model="newColumnName" placeholder="NAMA BANK" class="flex-1 border-2 p-3 rounded-xl text-xs uppercase"><button @click="addColumn" class="bg-green-600 text-white px-6 rounded-xl text-xs font-black uppercase">TAMBAH</button></div>
+                        <h2 class="font-black border-b pb-4 uppercase font-black">Akun Saldo</h2>
+                        <div v-for="(v, k) in saldoAwal" :key="k" class="flex items-center gap-2 font-black font-black"><input :value="k" class="flex-1 border p-2 rounded-lg text-[10px] bg-gray-100 uppercase" disabled><button v-if="k !== 'Laci'" @click="deleteColumn(k)" class="bg-red-100 text-red-600 p-2 rounded-lg"><i class="fas fa-trash font-black"></i></button></div>
+                        <div class="pt-4 flex gap-2 font-black font-black"><input v-model="newColumnName" placeholder="NAMA BANK" class="flex-1 border-2 p-3 rounded-xl text-xs uppercase font-black font-black font-black"><button @click="addColumn" class="bg-green-600 text-white px-6 rounded-xl text-xs uppercase font-black">TAMBAH</button></div>
                     </div>
-                    <button @click="resetAllDataPermanently" class="w-full bg-red-600 text-white py-4 rounded-2xl text-[10px] font-black shadow-lg">NUKLIR RESET TOTAL</button>
-                </div>
-
-                <div v-if="activeTab == 'piutang'" class="max-w-3xl mx-auto space-y-3 font-black uppercase italic">
-                    <div v-for="(t, i) in transaksiList" v-if="t.status == 'hutang'" :key="i" class="bg-white p-4 rounded-xl border-l-8 border-red-600 shadow flex justify-between items-center font-black">
-                        <div class="flex-1"><p class="text-xs mb-1">{{t.nama}} ({{t.tipe}})</p><p class="text-[10px] text-red-600 font-black">UTANG: Rp{{formatUang(t.total)}}</p></div>
-                        <button @click="triggerPelunasan(t)" class="bg-green-600 text-white px-5 py-2 rounded-lg text-[9px] shadow uppercase font-black">LUNASI</button>
-                    </div>
-                </div>
-
-                <div v-if="activeTab == 'berhasil'" class="max-w-4xl mx-auto space-y-4 font-black uppercase italic">
-                    <div v-for="(t, i) in filteredRiwayat" :key="i" class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm font-black">
-                        <div class="flex-1 truncate pr-2 font-black"><span :class="['keluar','paylater'].includes(t.tipe) ? 'text-red-600' : 'text-gray-800'" class="text-xs block mb-1">[{{t.tipe.toUpperCase()}}] {{t.nama}}</span><span class="text-[8px] text-gray-400">{{t.tanggal}} | Rp{{formatUang(t.total)}}</span></div>
-                        <div class="flex gap-2 font-black"><button @click="handleReprint(t)" class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg font-black"><i class="fas fa-print"></i></button><button @click="undoTransaction(i)" class="bg-red-50 text-red-500 w-8 h-8 rounded-lg font-black"><i class="fas fa-undo"></i></button></div>
-                    </div>
-                </div>
-
-                <div v-if="activeTab == 'laporan'" class="max-w-xl mx-auto space-y-6 text-center font-black uppercase">
-                    <div class="bg-white p-8 rounded-3xl shadow-sm border italic font-black">
-                        <h2 class="mb-6 text-blue-900 border-b pb-4">Audit Profit</h2>
-                        <div class="grid grid-cols-2 gap-4 mb-8">
-                            <div class="bg-green-50 p-6 rounded-2xl border border-green-100 font-black"><p class="text-[9px] text-green-500 mb-1">LABA SESI</p><p class="text-xl text-green-700 font-black font-black">Rp{{ formatUang(monitor.laba) }}</p></div>
-                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 font-black font-black"><p class="text-[9px] text-blue-400 mb-1">LABA CLOUD</p><p class="text-xl text-blue-700 font-black font-black">Rp{{ formatUang(monitor.labaTotal) }}</p></div>
-                        </div>
-                        <button @click="uploadData" class="w-full bg-blue-700 text-white py-4 rounded-xl shadow uppercase font-black">Sync Cloud</button>
-                        <div class="pt-6 border-t mt-6"><button @click="finishSession" :class="isSynced ? 'bg-red-600 shadow-xl' : 'btn-locked bg-gray-400'" class="w-full py-5 rounded-2xl text-white text-[11px] font-black uppercase">AKHIRI SESI SEKARANG</button></div>
-                    </div>
+                    <button @click="resetAllDataPermanently" class="w-full bg-red-600 text-white py-4 rounded-2xl text-[10px] font-black shadow-lg">NUKLIR RESET CLOUD</button>
                 </div>
             </section>
 
             <nav class="lg:hidden fixed bottom-0 left-0 w-full mobile-nav flex justify-around p-2 pb-6 shadow-2xl z-50">
-                <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="activeTab == tab.id ? 'active' : ''" class="tab-btn-mobile flex flex-col items-center gap-1 p-2 flex-1 transition font-black font-black font-black font-black"><i :class="tab.icon + ' text-lg'"></i><span class="text-[7px] uppercase font-black">{{ tab.label }}</span></button>
+                <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="activeTab == tab.id ? 'active' : ''" class="tab-btn-mobile flex flex-col items-center gap-1 p-2 flex-1 transition font-black"><i :class="tab.icon + ' text-lg font-black'"></i><span class="text-[7px] uppercase font-black">{{ tab.label }}</span></button>
             </nav>
         </main>
-    </div>
-
-    <div v-if="showNasabahModal" class="fixed inset-0 bg-black bg-opacity-80 z-[400] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl uppercase italic font-black">
-            <div class="p-4 bg-blue-700 text-white flex justify-between items-center font-black"><span class="text-[10px]">RIWAYAT: {{ selectedNasabahNama }}</span><button @click="showNasabahModal = false"><i class="fas fa-times"></i></button></div>
-            <div id="nasabah-ledger-print" class="p-6 max-h-[60vh] overflow-y-auto no-scrollbar font-black bg-white thermal-font">
-                <div v-for="trx in riwayatNasabahSpecific" class="border-b py-2 flex justify-between items-center font-black"><div><p class="text-[10px] font-black" :class="trx.modeTabungan == 'setor' ? 'text-blue-600' : 'text-red-600'">{{ trx.modeTabungan == 'setor' ? '(STR)' : '(TRK)' }}</p><p class="text-[8px] text-gray-400">{{ trx.tanggal }}</p></div><p class="text-[10px] font-black">Rp{{ formatUang(trx.total) }}</p></div>
-                <div class="mt-4 p-4 bg-gray-50 rounded-xl flex justify-between items-center border border-black font-black font-black font-black"><span>SALDO AKHIR</span><span>Rp{{ formatUang(nasabahList[selectedNasabahNama]) }}</span></div>
-            </div>
-            <div class="p-4 grid grid-cols-2 gap-2 font-black font-black"><button @click="printNasabahLedger" class="bg-blue-600 text-white py-3 rounded-xl text-[10px] font-black uppercase">CETAK BUKU</button><button @click="showNasabahModal = false" class="bg-gray-100 py-3 rounded-xl text-[10px] font-black uppercase">TUTUP</button></div>
-        </div>
     </div>
 </div>
 
 <script>
-// Firebase Config v65
+// Firebase Config v67
 const firebaseConfig = {
   apiKey: "AIzaSyC4MsTF08I2zXqX6IimdATSGRFl0GV3WyQ",
   authDomain: "newbrilink-ac715.firebaseapp.com",
@@ -239,12 +205,11 @@ new Vue({
     data: {
         isLoggedIn: false, activeTab: 'dashboard', sessionStarted: false, isPreviewOpen: false, isSynced: false,
         filterRiwayat: 'semua', modeTabungan: 'setor', newColumnName: '', paymentSource: 'Laci',
-        showNasabahModal: false, selectedNasabahNama: '', riwayatNasabahSpecific: [],
         selectedBarangId: null, jumlahBeli: 1, gudang: {},
         newItem: { nama: '', stok: 0, modal: 0, jual: 0 },
         login: { email: '', pass: '' },
         config: { namaToko: 'AGEN BAROKAH', alamat: 'ALAMAT AGEN', nomorHp: '08XX', footer: '*** TERIMA KASIH ***' },
-        tabs: [{id:'dashboard', label:'Dash', icon: 'fas fa-chart-pie'}, {id:'input', label:'Kasir', icon: 'fas fa-cash-register'}, {id:'gudang', label:'Gudang', icon: 'fas fa-warehouse'}, {id:'piutang', label:'Utang', icon: 'fas fa-hand-holding-usd'}, {id:'berhasil', label:'Riwayat', icon: 'fas fa-history'}, {id:'laporan', label:'Report', icon: 'fas fa-chart-line'}, {id:'akun', label:'Profil', icon: 'fas fa-user-circle'}],
+        tabs: [{id:'dashboard', label:'Dash', icon: 'fas fa-chart-pie'}, {id:'input', label:'Kasir', icon: 'fas fa-cash-register'}, {id:'gudang', label:'Gudang', icon: 'fas fa-warehouse'}, {id:'piutang', label:'Utang', icon: 'fas fa-hand-holding-usd'}, {id:'berhasil', label:'Riwayat', icon: 'fas fa-history'}, {id:'laporan', label:'Report', icon: 'fas fa-chart-line'}, {id:'akun', label:'Set', icon: 'fas fa-user-circle'}],
         saldoAwal: { BRI: 0, Mandiri: 0, Dana: 0, Digipos: 0, Pulsa: 0, Laci: 0 },
         monitor: { laba: 0, hutang: 0, tabungan: 0, labaTotal: 0 }, nasabahList: {},
         tipe: 'transfer',
@@ -272,20 +237,34 @@ new Vue({
             db.ref('laporan').on('value', (s) => { let total = 0; s.forEach((c) => { total += c.val().totalLaba || 0; }); this.monitor.labaTotal = total; });
         },
         recalculateBalances() { let h = 0; let t = 0; let nasabah = {}; this.transaksiList.forEach(tr => { if(tr.status == 'hutang') h += tr.total; if(tr.tipe == 'tabungan' && tr.status !== 'hutang') { if(!nasabah[tr.nama]) nasabah[tr.nama] = 0; if(tr.modeTabungan == 'tarik') { t -= tr.total; nasabah[tr.nama] -= tr.total; } else { t += tr.total; nasabah[tr.nama] += tr.total; } } }); this.monitor.hutang = h; this.monitor.tabungan = t; this.nasabahList = nasabah; },
-        showDetailNasabah(nama) { this.selectedNasabahNama = nama; this.riwayatNasabahSpecific = this.transaksiList.filter(t => t.tipe == 'tabungan' && t.nama == nama && t.status == 'sukses'); this.showNasabahModal = true; },
-        restockItem() { if(!this.newItem.nama) return alert("Isi Nama!"); const cost = this.newItem.modal * this.newItem.stok; if(this.saldoAwal[this.paymentSource] < cost) return alert("Saldo Kurang!"); this.saldoAwal[this.paymentSource] -= cost; db.ref('gudang/' + Date.now()).set(this.newItem); this.updateCloud(); this.newItem = { nama: '', stok: 0, modal: 0, jual: 0 }; alert("Ok!"); },
-        deleteItem(id) { if(confirm("Hapus?")) db.ref('gudang/' + id).remove(); },
-        addColumn() { if(!this.newColumnName) return; this.$set(this.saldoAwal, this.newColumnName.toUpperCase(), 0); this.newColumnName = ''; this.updateCloud(); },
-        deleteColumn(k) { if(confirm("Hapus?")) { this.$delete(this.saldoAwal, k); this.updateCloud(); } },
-        startSession() { this.sessionStarted = true; this.isSynced = false; this.updateCloud(); },
-        updateCloud() { db.ref('active_session').set({ saldo: this.saldoAwal, started: this.sessionStarted, labaSesi: this.monitor.laba, synced: this.isSynced }); },
-        saveConfig() { db.ref('config').set(this.config); alert("Saved!"); },
+        
+        // FUNGSI HAPUS RIWAYAT (UNDO / REVERSAL)
+        deleteTransaction(t) {
+            if(!confirm("YAKIN HAPUS? SALDO AKAN DI-UNDO OTOMATIS!")) return;
+            const idx = this.transaksiList.findIndex(item => item.jam == t.jam && item.nama == t.nama);
+            if(idx > -1) {
+                // LOGIKA UNDO SALDO
+                if(t.tipe == 'transfer') { this.saldoAwal[t.rek] += (t.nom + t.pb); if(t.status == 'sukses') { if(t.admM == 'tunai') this.saldoAwal.Laci -= t.total; else this.saldoAwal[t.rek] -= t.adm; this.monitor.laba -= t.laba; } }
+                else if(t.tipe == 'tarik' || t.tipe == 'wesel') { this.saldoAwal[t.rek] -= t.nom; if(t.admM == 'tunai') this.saldoAwal.Laci += (t.nom - (t.tipe=='wesel'?t.adm:0)); else { this.saldoAwal.Laci += t.nom; this.saldoAwal[t.rek] -= t.adm; } this.monitor.laba -= t.laba; }
+                else if(t.tipe == 'barang') { 
+                    if(t.status == 'sukses') this.saldoAwal.Laci -= t.total; 
+                    this.monitor.laba -= t.laba; 
+                    if(this.gudang[t.barangId]) { this.gudang[t.barangId].stok += t.qty; db.ref('gudang/' + t.barangId).set(this.gudang[t.barangId]); }
+                }
+                else if(t.tipe == 'tabungan') { if(t.modeTabungan == 'setor') this.saldoAwal[t.rek] -= t.total; else this.saldoAwal[t.rek] += t.total; }
+                else if(t.tipe == 'pulsa') { this.saldoAwal[t.rek] += (t.total - t.laba); this.saldoAwal.Laci -= t.total; this.monitor.laba -= t.laba; }
+                else if(t.tipe == 'migrasi') { this.saldoAwal[t.rek] += t.nom; this.saldoAwal[t.targetBank] -= t.nom; }
+                
+                this.transaksiList.splice(idx, 1);
+                db.ref('permanent_history').set(this.transaksiList);
+                this.updateCloud();
+            }
+        },
+
         openPreview(status, wantPrint) {
             const d = new Date(); let n, modal, adm = 0, rek = this.form.rekening;
             if(this.tipe == 'barang') {
-                if(!this.selectedBarangId) return alert("Pilih Barang!");
                 const b = this.gudang[this.selectedBarangId];
-                if(b.stok < this.jumlahBeli) return alert("Stok Kurang!");
                 n = b.jual * this.jumlahBeli; modal = b.modal * this.jumlahBeli; this.form.nama = "JUAL: " + b.nama;
             } else {
                 n = parseInt(this.form.nominal) || 0; adm = parseInt(this.form.adminToko) || 0; modal = this.tipe == 'pulsa' ? parseInt(this.form.modal) || 0 : 0;
@@ -298,42 +277,20 @@ new Vue({
             if(!this.printData) return; const d = this.printData;
             if(d.tipe == 'transfer') { this.saldoAwal[d.rek] -= (d.nom + d.pb); if(d.status == 'sukses') { if(d.admM == 'tunai') this.saldoAwal.Laci += d.total; else { this.saldoAwal[d.rek] += d.adm; } this.monitor.laba += d.laba; } } 
             else if(d.tipe == 'tarik' || d.tipe == 'wesel') { this.saldoAwal[d.rek] += d.nom; if(d.admM == 'tunai') this.saldoAwal.Laci -= (d.nom - (d.tipe=='wesel'?d.adm:0)); else { this.saldoAwal.Laci -= d.nom; this.saldoAwal[d.rek] += d.adm; } this.monitor.laba += d.laba; }
-            else if(d.tipe == 'barang') { 
-                if(d.status == 'sukses') this.saldoAwal.Laci += d.total; 
-                this.monitor.laba += d.laba; this.gudang[d.barangId].stok -= d.qty; db.ref('gudang/' + d.barangId).set(this.gudang[d.barangId]); 
-            }
-            else if(d.tipe == 'tabungan') { if(d.modeTabungan == 'setor') { this.saldoAwal[d.rek] += d.total; } else { this.saldoAwal[d.rek] -= d.total; } }
+            else if(d.tipe == 'barang') { if(d.status == 'sukses') this.saldoAwal.Laci += d.total; this.monitor.laba += d.laba; this.gudang[d.barangId].stok -= d.qty; db.ref('gudang/' + d.barangId).set(this.gudang[d.barangId]); }
+            else if(d.tipe == 'tabungan') { if(d.modeTabungan == 'setor') this.saldoAwal[d.rek] += d.total; else this.saldoAwal[d.rek] -= d.total; }
+            else if(d.tipe == 'pulsa') { this.saldoAwal[d.rek] -= (d.total - d.laba); this.saldoAwal.Laci += d.total; this.monitor.laba += d.laba; }
             else if(d.tipe == 'paylater') { this.saldoAwal[d.rek] -= d.nom; d.status = 'hutang'; }
             else if(d.tipe == 'migrasi') { this.saldoAwal[d.rek] -= d.nom; this.saldoAwal[d.targetBank] += d.nom; }
             this.transaksiList.push({...d}); db.ref('permanent_history').set(this.transaksiList); this.isSynced = false; this.updateCloud();
             this.form = { nama: 'UMUM', nominal: 0, adminToko: 0, potonganBank: 0, modal: 0, bayar: 0, rekening: 'Laci', targetBank: 'Laci', adminMethod: 'tunai' };
-            this.selectedBarangId = null; this.jumlahBeli = 1; alert("Berhasil!");
+            this.selectedBarangId = null; this.jumlahBeli = 1;
         },
-        async printNasabahLedger() {
-            const r = (l, v) => { let vs = "Rp" + this.formatUang(v); let sp = 32 - l.length - vs.length; return l + " ".repeat(Math.max(1, sp)) + vs + "\n"; };
-            const i = "\x1B\x40", c = "\x1B\x61\x01", l = "\x1B\x61\x00", b = "\x1B\x45\x01", o = "\x1B\x45\x00";
-            let txt = i + c + b + this.config.namaToko + o + "\n==============================\n" + "BUKU TABUNGAN: " + this.selectedNasabahNama + "\n------------------------------\n" + l;
-            this.riwayatNasabahSpecific.forEach(trx => { txt += trx.tanggal + " " + (trx.modeTabungan == 'setor' ? 'STR' : 'TRK') + "\n" + r("NOMINAL", trx.total); });
-            txt += "------------------------------\n" + b + r("SALDO AKHIR", this.nasabahList[this.selectedNasabahNama]) + o + c + "\n" + this.config.footer + "\n\n\n\n\n";
-            this.executeBT(txt);
-        },
-        async executeBT(txt) {
-            try {
-                const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] });
-                const char = await (await (await device.gatt.connect()).getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb')).getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
-                const data = new TextEncoder().encode(txt);
-                for (let i = 0; i < data.length; i += 20) { await char.writeValue(data.slice(i, i + 20)); await new Promise(r => setTimeout(r, 50)); }
-                device.gatt.disconnect();
-            } catch (e) { alert("BT Fail!"); }
-        },
-        renderChart() { const ctx = document.getElementById('incomeChart'); if(!ctx) return; if(this.chart) this.chart.destroy(); const dataMap = {}; this.transaksiList.forEach(t => { if(t.status == 'sukses') dataMap[t.tanggal] = (dataMap[t.tanggal] || 0) + t.laba; }); const labels = Object.keys(dataMap).slice(-7); this.chart = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels, datasets: [{ label: 'Profit', data: labels.map(l => dataMap[l]), borderColor: '#2563eb', tension: 0.4 }] } }); },
-        handleLogout() { if(!this.sessionStarted) auth.signOut().then(() => location.reload()); },
-        uploadData() { db.ref('laporan/' + Date.now()).set({ totalLaba: this.monitor.laba, tanggal: new Date().toLocaleDateString('id-ID') }).then(() => { this.isSynced = true; this.updateCloud(); alert("Sync OK!"); }); },
-        finishSession() { if(confirm("Tutup Sesi?")) { db.ref('active_session').remove(); location.reload(); } },
-        resetAllDataPermanently() { if(confirm("NUKLIR! SEMUA HILANG!")) { db.ref('active_session').remove(); db.ref('permanent_history').remove(); db.ref('laporan').remove(); db.ref('gudang').remove(); location.reload(); } },
-        handleReprint(t) { alert("Cetak Ulang: " + t.nama); },
-        triggerPelunasan(t) { if(confirm("Lunasi Utang Ini?")) { t.status = 'sukses'; this.saldoAwal.Laci += t.total; if(['transfer','paylater','pulsa','barang'].includes(t.tipe)) this.monitor.laba += t.laba; db.ref('permanent_history').set(this.transaksiList); this.updateCloud(); } },
-        undoTransaction(idx) { if(confirm("Undo?")) { const t = this.transaksiList[idx]; const source = t.rek || 'Laci'; this.saldoAwal[source] -= t.total; t.status = 'hutang'; db.ref('permanent_history').set(this.transaksiList); this.updateCloud(); } }
+        startSession() { this.sessionStarted = true; this.isSynced = false; this.updateCloud(); },
+        updateCloud() { db.ref('active_session').set({ saldo: this.saldoAwal, started: this.sessionStarted, labaSesi: this.monitor.laba, synced: this.isSynced }); },
+        restockItem() { if(!this.newItem.nama) return; const cost = this.newItem.modal * this.newItem.stok; if(this.saldoAwal[this.paymentSource] < cost) return alert("Saldo Kurang!"); this.saldoAwal[this.paymentSource] -= cost; db.ref('gudang/' + Date.now()).set(this.newItem); this.updateCloud(); this.newItem = { nama: '', stok: 0, modal: 0, jual: 0 }; alert("Ok!"); },
+        saveConfig() { db.ref('config').set(this.config); alert("Ok!"); },
+        renderChart() { const ctx = document.getElementById('incomeChart'); if(!ctx) return; if(this.chart) this.chart.destroy(); const dataMap = {}; this.transaksiList.forEach(t => { if(t.status == 'sukses') dataMap[t.tanggal] = (dataMap[t.tanggal] || 0) + t.laba; }); const labels = Object.keys(dataMap).slice(-7); this.chart = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels, datasets: [{ label: 'Profit', data: labels.map(l => dataMap[l]), borderColor: '#2563eb', tension: 0.4 }] } }); }
     }
 });
 </script>
